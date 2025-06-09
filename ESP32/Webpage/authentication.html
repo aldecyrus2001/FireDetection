@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        main {
+            width: 100vw;
+            height: 100vh;
+            background-color: azure;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-form {
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .title h1 {
+            font-family: sans-serif;
+
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-body {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-body input {
+            padding: 5px;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <div class="login-form">
+            <div class="title">
+                <h1>Authentication</h1>
+            </div>
+            <form action="" onsubmit=login(event)>
+                <div class="form-body">
+                    <label for="">Username</label>
+                    <input name="Username" type="text" placeholder="Username">
+                </div>
+                <div class="form-body">
+                    <label for="">Password</label>
+                    <input name="Password" type="password" placeholder="Password">
+                </div>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        function login(e) {
+            e.preventDefault();
+            const form = e.target;
+
+            const username = form.Username.value;
+            const password = form.Password.value;
+
+            console.log("Username:", username);
+            console.log("Password:", password);
+
+            // sent to the esp32
+        }
+    </script>
+
+</body>
+
+</html>

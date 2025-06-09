@@ -11,7 +11,10 @@ String WifiPassword = "";
 
 WebServer server(80);
 
-const char custom_html[] = R"rawliteral(<!DOCTYPE html><html lang="en"><head>
+const char networkPage[] = R"rawliteral(
+<!DOCTYPE html>
+<html lang="en">
+<head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ESP 32 SETUP</title>
@@ -133,8 +136,6 @@ const char custom_html[] = R"rawliteral(<!DOCTYPE html><html lang="en"><head>
         .status {
             display: none;
         }
-
-        
     </style>
 </head>
 <body>
@@ -254,8 +255,10 @@ const char custom_html[] = R"rawliteral(<!DOCTYPE html><html lang="en"><head>
 </html>
 )rawliteral";
 
+const char authenticationPage[] = R"rawliteral()rawliteral";
+
 void handleRoot() {
-  server.send(200, "text/html", custom_html);
+  server.send(200, "text/html", networkPage);
 }
 
 void handleScan() {
