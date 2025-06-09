@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP 32 SETUP</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+
+<body>
+    <!--Modal-->
+    <div class="modalContainer">
+        <div class="wifiModal">
+            <div class="modalTitle">
+                <h1>Wifi Management</h1>
+            </div>
+            <div class="loader">
+            </div>
+            <div class="isVisible wifiMainContainer">
+                <div id="wifiList" class="wifiListsContainer">
+                </div>
+                <div class="wifiCred">
+                    <div class="ssid">
+                        <span>SSID : </span>
+                        <span class="ssidName"></span>
+                    </div>
+                    <div class="password">
+                        <input class="password" type="password">
+                    </div>
+                    <div class="button">
+                        <button class="buttonConnect">Connect</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const wifiNetworks = [
+            { ssid: "HomeWiFi", rssi: -50, encryption: "WPA2", channel: 6 },
+            { ssid: "OfficeWiFi", rssi: -70, encryption: "WEP", channel: 11 },
+            { ssid: "PublicWiFi", rssi: -90, encryption: "None", channel: 1 }
+        ];
+
+        const wifiListContainer = document.getElementById('wifiList');
+        const wifiCredContainer = document.querySelector('.wifiCred');
+        const ssidContainer = document.querySelector('.ssidName');
+        const buttonConnect = document.querySelector('.buttonConnect');
+        const passwordInput = document.querySelector('.password input');
+
+
+        wifiListContainer.innerHTML = '';
+
+        const fragment = document.createDocumentFragment();
+
+        wifiNetworks.forEach(({ ssid, rssi }) => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'wifiInformation';
+
+            wrapper.innerHTML = `
+    <span>${ssid}</span>
+    <img class="wifiButton" src="Asset/wi-fi.png" alt="WiFi Icon">
+  `;
+            fragment.appendChild(wrapper);
+        });
+
+        wifiListContainer.appendChild(fragment);
+
+        document.querySelectorAll('.wifiInformation').forEach(el => {
+            el.addEventListener('click', () => {
+                wifiCredContainer.classList.add('isVisible');
+                const ssid = el.querySelector('span')?.textContent || 'Unknown';
+                ssidContainer.textContent = ssid;
+            });
+        });
+
+        buttonConnect.addEventListener('click', function () {
+            const passwordValue = passwordInput.value;
+            console.log('Password:', passwordValue);
+        });
+    </script>
+
+</body>
+
+</html>
