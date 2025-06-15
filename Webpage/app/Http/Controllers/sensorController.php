@@ -4,8 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\sensor;
 use App\Models\sensorData;
+use App\Models\sensorThresholds;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+
+use Nette\Schema\Elements\Structure;
+use Predis\Command\Redis\Json\JSONDEL;
 
 use function Laravel\Prompts\error;
 
@@ -17,14 +21,14 @@ class sensorController extends Controller
         $request->validate([
             'sensor_name' => 'required|string',
             'sensor_location' => 'required|string',
-            'ipaddress' => 'required|string',
+            'token' => 'required|string|max:255',
             'x_axis' => 'required|string',
             'y_axis' => 'required|string',
         ]);
 
-        if (Sensor::where('ipaddress', $request->ipaddress)->exists()) {
+        if (Sensor::where('token', $request->token)->exists()) {
             return redirect()->back()->withErrors([
-                'ipaddress' => 'The IP address is already in use.'
+                'token' => 'Sensor is already registered.'
             ])->withInput();
         }
 
@@ -43,13 +47,64 @@ class sensorController extends Controller
         return Sensor::all();
     }
 
+    public function fetchReadings()
+    {
+        $readings = SensorData::with('sensor') // eager load sensor data
+            ->orderBy('date', 'desc')
+            ->limit(100) // optional limit
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'sensor_name' => $item->sensor->sensor_name ?? 'N/A',
+                    'sensor_location' => $item->sensor->sensor_location ?? 'N/A',
+                    'lpg_value' => $item->lpg_value,
+                    'co_value' => $item->co_value,
+                    'smoke_value' => $item->smoke_value,
+                    'fire_value' => $item->fire_value,
+                    'date' => $item->date . ' ' . $item->time,
+                ];
+            });
+
+        return response()->json($readings);
+    }
+
+    public function fetchThreshold()
+    {
+        return sensorThresholds::find(1);
+    }
+
+    public function updateThreshold(Request $request)
+    {
+        $request->validate([
+            'co_value' => 'required|numeric|min:0',
+            'lpg_value' => 'required|numeric|min:0',
+            'smoke_value' => 'required|numeric|min:0',
+            'fire_value' => 'required|numeric|min:0',
+        ]);
+
+        $threshold = sensorThresholds::find(1);
+
+        if (!$threshold) {
+            return redirect()->back()->with('message', 'Threshold not found.');
+        }
+
+        $threshold->update([
+            'co_value' => $request->co_value,
+            'lpg_value' => $request->lpg_value,
+            'smoke_value' => $request->smoke_value,
+            'fire_value' => $request->fire_value,
+        ]);
+        
+        return redirect()->back()->with('success', 'Threshold updated successfully.');
+    }
+
     public function fetch_sensor_data()
     {
         $sensors = Sensor::with(['readings' => function ($query) {
-            $query->orderBy('time', 'asc'); // Fetch all readings, ordered from oldest to newest
+            $query->orderBy('time', 'asc');
         }])->get();
 
-        // Transform to match your desired structure
         $result = $sensors->map(function ($sensor) {
             return [
                 'sensorID' => $sensor->sensorID,
@@ -70,42 +125,11 @@ class sensorController extends Controller
         return response()->json($result);
     }
 
-    // public function ping(Request $request)
-    // {
-    //     $sensorID = $request->input('sensorID');
-    //     $ipAddress = $request->input('ipAddress');
-
-        
-
-    //     try {
-    //         $espResponse = Http::timeout(5)->get("http://{$ipAddress}/handshake");
-
-    //         if ($espResponse->ok() && $espResponse->body() === 'ready') {
-    //             Sensor::where('sensorID', $sensorID)->update(['status' => 'Online']);
-    //             return response()->json([
-    //                 'success' => true,
-    //                 'message' => 'Sensor Online'
-    //             ]);
-    //         } else {
-    //             return response()->json([
-    //                 'success' => false,
-    //                 'message' => 'Sensor Unreachable!'
-    //             ]);
-    //         }
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Sensor is offline or unreachable.',
-    //             'error' => $e->getMessage()
-    //         ]);
-    //     }
-    // }
-
     public function heartbeat(Request $request)
     {
-        $ipAddress = $request->input('ipAddress');
+        $token = $request->input('token');
 
-        $sensor = Sensor::where('ipaddress', $ipAddress)->first();
+        $sensor = Sensor::where('token', $token)->first();
 
         if (!$sensor) {
             return response()->json(['success' => false, 'message' => 'Sensor not found'], 404);
@@ -127,5 +151,17 @@ class sensorController extends Controller
         ]);
 
         return response()->json(['success' => true, 'message' => 'Heartbeat and readings saved']);
+
+        // Request Structure "POST"
+        // URL = "http://127.0.0.1:8000/api/sensor/heartbeat"
+        // Body: JSON
+        // {
+        //     "LPG" : 27.3,
+        //     "CO" : 55,
+        //     "Smoke" : 3.7,
+        //     "Fire" : 0,
+        //     "token" : "192.168.211.253"
+        // }
+
     }
 }

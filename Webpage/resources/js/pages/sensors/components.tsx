@@ -23,7 +23,7 @@ type Components = {
     sensorID: number;
     sensor_name: string;
     sensor_location: string;
-    ipaddress: string;
+    token: string;
     x_axis: number;
     y_axis: number;
     status: string;
@@ -32,7 +32,7 @@ type Components = {
 
 type sensorForm = {
     sensor_name: string;
-    ipaddress: string;
+    token: string;
     sensor_location: string;
     x_axis: any;
     y_axis: any;
@@ -44,7 +44,7 @@ const components = () => {
     const [showMapLayout, setMapLayout] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm<Required<sensorForm>>({
         sensor_name: '',
-        ipaddress: '',
+        token: '',
         sensor_location: '',
         x_axis: '',
         y_axis: ''
@@ -143,7 +143,7 @@ const components = () => {
                                 <tr>
                                     <th className='px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>#</th>
                                     <th className='px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>Sensor Name</th>
-                                    <th className='px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>IP Address</th>
+                                    <th className='px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>Token</th>
                                     <th className='px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>Location</th>
                                     <th className='px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>Coordination X, Y</th>
                                     <th className='px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>Status</th>
@@ -155,7 +155,7 @@ const components = () => {
                                     <tr key={components.sensorID} className='hover:bg-gray-100 dark:hover:bg-gray-800 transition'>
                                         <td className='px-6 py-4 text-center whitespace-nowrap text-sm text-gray-900 dark:text-gray-100'>{components.sensorID}</td>
                                         <td className='px-6 py-4 text-center whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white'>{components.sensor_name}</td>
-                                        <td className='px-6 py-4 text-center whitespace-nowrap text-sm text-gray-500 dark:text-gray-300'>{components.ipaddress}</td>
+                                        <td className='px-6 py-4 text-center whitespace-nowrap text-sm text-gray-500 dark:text-gray-300'>{components.token}</td>
                                         <td className='px-6 py-4 text-center whitespace-nowrap text-sm text-gray-500 dark:text-gray-300'>{components.sensor_location}</td>
                                         <td className='px-6 py-4 text-center whitespace-nowrap text-sm text-gray-500 dark:text-gray-300'>{components.x_axis}, {components.y_axis}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
@@ -176,7 +176,7 @@ const components = () => {
                     </div>
                 </div>
             </AppLayout>
-            <Modal header='Add Sensor' isVisible={addModal} onClose={() => setAddModal(false)} children={
+            <Modal header='Add Sensor' subtitle='sample subtitle' isVisible={addModal} onClose={() => setAddModal(false)} children={
                 <>
                     <form onSubmit={submit}>
                         <div className='overflow-x-auto p-4'>
@@ -210,17 +210,17 @@ const components = () => {
                                     />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="ipaddress" className='text-black'>Ip Address</Label>
+                                    <Label htmlFor="token" className='text-black'>Sensor Token</Label>
                                     <Input
                                         className='text-black'
-                                        id="ipaddress"
+                                        id="token"
                                         type="text"
                                         required
                                         autoFocus
                                         tabIndex={3}
-                                        value={data.ipaddress}
-                                        onChange={(e) => setData('ipaddress', e.target.value)}
-                                        placeholder="192.168.x.x"
+                                        value={data.token}
+                                        onChange={(e) => setData('token', e.target.value)}
+                                        placeholder="Token"
                                     />
                                 </div>
                                 <div className="grid gap-2">

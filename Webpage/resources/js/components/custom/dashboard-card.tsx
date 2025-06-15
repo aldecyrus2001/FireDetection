@@ -3,7 +3,7 @@ import { IconType } from 'react-icons'; // or your actual source
 
 interface Card {
     name: string;
-    value: string;
+    value: string | number;
     image: string;
 }
 

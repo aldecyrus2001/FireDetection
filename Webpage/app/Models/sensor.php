@@ -15,7 +15,7 @@ class Sensor extends Model
     protected $fillable = [
         'sensor_name',
         'sensor_location',
-        'ipaddress',
+        'token',
         'x_axis',
         'y_axis',
         'last_seen',

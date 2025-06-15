@@ -8,11 +8,12 @@ import axios from 'axios';
 import DashboardCard from '@/components/custom/dashboard-card';
 import sensor from '../assets/motion-sensor.png'
 import user from '../assets/working.png'
-import fireIncidents from '../assets/fire-extinguisher.png'
-import today from '../assets/calendar.png'
+import offline from '../assets/offline.png'
 import map from '../assets/sample-map.jpg'
 import MapPreview from '@/components/custom/map-preview';
 import MapAlert from '@/components/custom/map-alert';
+import { toast } from 'react-toastify';
+import message from './message';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -43,16 +44,29 @@ const sampleObject: Coordinate[] = [
 ];
 
 export default function Dashboard() {
+    const [counts, setCounts] = useState({
+        users: 0,
+        sensors: 0,
+        offlineSensors: 0,
+        fireIncidents: 0,
+    });
     const [sensorData, setSensorData] = useState<Sensor[]>([]);
     const [alertModal, setAlertModal] = useState(false);
 
     useEffect(() => {
         fetchSensorData();
+        
     }, [])
+
+    useEffect(() => {
+        fetchDashboardWidgets();
+    }, []);
+
 
     const fetchSensorData = async () => {
         try {
             const response = await axios.post<Sensor[]>(route('fetch.sensor.data'));
+
 
             const limitedData = response.data.map(sensor => ({
                 ...sensor,
@@ -71,16 +85,27 @@ export default function Dashboard() {
         }
     };
 
+    const fetchDashboardWidgets = async () => {
+        try {
+            const response = await fetch(route('fetch-dashboards-widgets'));
+            const data = await response.json();
+            setCounts(data);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message: String(error);
+            toast.error(message);
+        }
+    };
+
     return (
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
                 <Head title="Dashboard" />
                 <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                     <div className="grid auto-rows-min gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                        <DashboardCard name='Users' value='10' image={user} />
-                        <DashboardCard name='Sensors' value='10' image={sensor} />
-                        <DashboardCard name='Fire Incidents' value='10' image={fireIncidents} />
-                        <DashboardCard name='Alerts Today' value='10' image={today} />
+                        <DashboardCard name='Users' value={counts.users} image={user} />
+                        <DashboardCard name='Sensors' value={counts.sensors} image={sensor} />
+                        <DashboardCard name='Offline Sensors' value={counts.offlineSensors} image={offline} />
+                        
 
                     </div>
                     <div className="grid auto-rows-min gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">

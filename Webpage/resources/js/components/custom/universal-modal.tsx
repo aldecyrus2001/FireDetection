@@ -3,12 +3,13 @@ import { MdClose } from 'react-icons/md';
 
 interface UModalProps {
     header: string;
+    subtitle: string;
     children: any;
     isVisible: boolean;
     onClose: () => void;
 }
 
-const Modal = ({ header, children, isVisible, onClose }: UModalProps) => {
+const Modal = ({ header, children, isVisible, onClose , subtitle}: UModalProps) => {
     if (!isVisible) return null;
     return (
         <>
@@ -17,8 +18,8 @@ const Modal = ({ header, children, isVisible, onClose }: UModalProps) => {
                     <button className='absolute top-4 right-5 hover:text-red-400 cursor-pointer text-black text-xl place-self-end' onClick={() => onClose()}><MdClose/></button>
                     <div className='flex justify-between'>
                         <div>
-                            <h1 className='text-2xl font-semibold text-slate-900'>Sensor Information</h1>
-                            <p className='text-sm text-slate-900'> Sample Description of this page</p>
+                            <h1 className='text-2xl font-semibold text-slate-900'>{header}</h1>
+                            <p className='text-sm text-slate-900'>{subtitle}</p>
                         </div>
                     </div>
                     <hr className='mt-2 mb-5 border-slate-600' />
