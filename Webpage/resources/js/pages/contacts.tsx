@@ -5,8 +5,9 @@ import { Select, SelectItem, SelectTrigger, SelectValue, SelectContent } from '@
 import AppLayout from '@/layouts/app-layout'
 import { BreadcrumbItem } from '@/types'
 import { Head, useForm } from '@inertiajs/react'
-import React, { useEffect, useState } from 'react'
+import React, { FormEventHandler, useEffect, useState } from 'react'
 import { MdContactPhone } from 'react-icons/md'
+import { toast } from 'react-toastify'
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -28,6 +29,7 @@ type contactForm = {
 }
 
 const contacts = () => {
+    const [viewContact, setViewContact] = useState<Contact | null>(null);
     const [addContact, setAddContact] = useState(false);
     const [contact, setContact] = useState<Contact[]>([]);
     const { data, setData, post, processing, errors, reset } = useForm<Required<contactForm>>({
@@ -41,8 +43,34 @@ const contacts = () => {
     }, []);
 
     const fetchContacts = async () => {
-
+        try {
+            const response = await fetch(route('get-contacts'));
+            const data = await response.json();
+            setContact(data);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            toast.error(errorMessage);
+        }
     }
+
+    const submit: FormEventHandler = (e) => {
+        e.preventDefault();
+
+        post(route('add-contact'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Contact added successfully!');
+                setAddContact(false);
+                reset();
+                fetchContacts();
+            },
+            onError: (errors) => {
+                const errorMessages = Object.values(errors).flat();
+                toast.error(errorMessages[0] || 'Failed to create contact!');
+            }
+        });
+    }
+
     return (
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
@@ -77,7 +105,7 @@ const contacts = () => {
                                         <td className='px-6 py-4 text-center whitespace-nowrap text-sm text-gray-500 dark:text-gray-300'>{contacts.phone}</td>
                                         <td className='px-6 py-4 text-center whitespace-nowrap text-sm text-gray-500 dark:text-gray-300'>{contacts.priority_level}</td>
                                         <td className='px-6 py-4  whitespace-nowrap text-sm font-medium flex gap-2 justify-center'>
-                                            <button className='px-2 py-1 rounded text-white bg-green-400 hover:bg-green-900 dark:bg-green-400'>View</button>
+                                            <button className='px-2 py-1 rounded text-white bg-green-400 hover:bg-green-900 dark:bg-green-400' onClick={() => setViewContact(contacts)}>View</button>
                                             <button className='px-2 py-1 rounded text-white bg-indigo-400 hover:bg-indigo-900 dark:bg-indigo-400'>Edit</button>
                                             <button className='px-2 py-1 rounded text-white bg-red-400 hover:bg-red-900 dark:bg-red-400'>Remove</button>
                                         </td>
@@ -90,7 +118,7 @@ const contacts = () => {
             </AppLayout>
             <Modal header='Add Contact' subtitle='sample subtitle' isVisible={addContact} onClose={() => setAddContact(false)} children={
                 <>
-                    <form>
+                    <form onSubmit={submit}>
                         <div className='overflow-x-auto p-4'>
                             <div className="flex flex-col gap-4 w-200">
                                 <div className="grid gap-2">
@@ -114,8 +142,7 @@ const contacts = () => {
                                         id="phone"
                                         type="text"
                                         required
-                                        autoFocus
-                                        tabIndex={1}
+                                        tabIndex={2}
                                         value={data.phone}
                                         onChange={(e) => setData('phone', e.target.value)}
                                         placeholder="+63 XXX XXXX XXX"
@@ -132,9 +159,9 @@ const contacts = () => {
                                             <SelectValue placeholder="Select Priority Level" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="1">High</SelectItem>
-                                            <SelectItem value="2">Medium</SelectItem>
-                                            <SelectItem value="3">Low</SelectItem>
+                                            <SelectItem value="High">High</SelectItem>
+                                            <SelectItem value="Medium">Medium</SelectItem>
+                                            <SelectItem value="Low">Low</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -148,6 +175,26 @@ const contacts = () => {
                 </>
             }>
 
+            </Modal>
+            <Modal
+                header='Contact Details'
+                subtitle=''
+                isVisible={viewContact !== null}
+                onClose={() => setViewContact(null)}
+            >
+                {viewContact && (
+                    <div className=' text-black space-y-4 w-100'>
+                        <div>
+                            <Label>Name: {viewContact.name}</Label>
+                        </div>
+                        <div>
+                            <Label>Phone: {viewContact.phone}</Label>
+                        </div>
+                        <div>
+                            <Label>Priority Level: {viewContact.priority_level}</Label>
+                        </div>
+                    </div>
+                )}
             </Modal>
         </>
     )

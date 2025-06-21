@@ -19,7 +19,7 @@ const Modal = ({ header, children, isVisible, onClose , subtitle}: UModalProps) 
                     <div className='flex justify-between'>
                         <div>
                             <h1 className='text-2xl font-semibold text-slate-900'>{header}</h1>
-                            <p className='text-sm text-slate-900'>{subtitle}</p>
+                            <p className='text-sm text-slate-900 italic'>{subtitle}</p>
                         </div>
                     </div>
                     <hr className='mt-2 mb-5 border-slate-600' />
