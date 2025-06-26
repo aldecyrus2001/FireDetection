@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\AssignToClassEvent;
 use App\Models\sensor;
 use App\Models\sensorData;
 use App\Models\sensorThresholds;
@@ -149,7 +148,6 @@ class sensorController extends Controller
             'date' => now()->format('Y-m-d'),
         ]);
 
-        // event(new AssignToClassEvent());
 
         return response()->json(['success' => true, 'message' => 'Heartbeat and readings saved']);
 

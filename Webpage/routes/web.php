@@ -5,6 +5,7 @@ use App\Http\Controllers\dashboardController;
 use App\Http\Controllers\messageController;
 use App\Http\Controllers\sensorController;
 use App\Http\Controllers\userController;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -52,6 +53,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('sensor/data', [sensorController::class, 'fetch_sensor_data'])
         ->name('fetch.sensor.data');
+
+    Broadcast::channel('public-alert', function() {
+        return true;
+    });
 });
 
 require __DIR__ . '/settings.php';

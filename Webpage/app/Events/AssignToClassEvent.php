@@ -10,16 +10,16 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class AssignToClassEvent
+class AssignToClassEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
      * Create a new event instance.
      */
-    public function __construct()
+
+    public function __construct(public string $message)
     {
-        //
     }
 
     /**
@@ -31,7 +31,7 @@ class AssignToClassEvent
     {
         return [
             // new PrivateChannel('channel-name'),
-            // new Channel('public-alert'),
+            new Channel('public-alert'),
         ];
     }
 }

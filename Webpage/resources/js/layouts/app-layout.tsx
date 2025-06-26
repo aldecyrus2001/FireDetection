@@ -1,8 +1,8 @@
+import { useEffect, useState, type ReactNode } from 'react';
 import MapAlert from '@/components/custom/map-alert';
 import Modal from '@/components/custom/universal-modal';
 import AppLayoutTemplate from '@/layouts/app/app-sidebar-layout';
 import { type BreadcrumbItem } from '@/types';
-import { useState, type ReactNode } from 'react';
 import { Slide, ToastContainer } from 'react-toastify';
 
 interface AppLayoutProps {
@@ -26,7 +26,26 @@ const sampleObject: Coordinate[] = [
 ];
 
 export default function AppLayout({ children, breadcrumbs, ...props }: AppLayoutProps) {
-    const [alertModal, setAlertModal] = useState(true);
+    const [alertModal, setAlertModal] = useState(false);
+
+    useEffect(() => {
+        if (typeof window.Echo !== 'undefined') {
+            const channel = window.Echo.channel('public-alert');
+
+            channel.listen('AssignToClassEvent', (e: any) => {
+                console.log('🔥 Event received:', e);
+                setAlertModal(true); // ✅ trigger modal
+            });
+
+            // Optional cleanup
+            return () => {
+                window.Echo.leave('public-alert');
+            };
+        } else {
+            console.error('❌ Echo is not defined');
+        }
+    }, []);
+
     return (
         <AppLayoutTemplate breadcrumbs={breadcrumbs} {...props}>
             {children}

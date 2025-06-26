@@ -48,7 +48,20 @@
 
 <body class="font-sans antialiased">
     @inertia
-</body>
 
+    <!-- <script>
+        window.addEventListener('DOMContentLoaded', function() {
+            if (typeof window.Echo !== 'undefined') {
+                window.Echo.channel('public-alert')
+                    .listen('AssignToClassEvent', (e) => {
+                        console.log('Event received:', e);
+                    });
+            } else {
+                console.error('Echo is not defined. Make sure bootstrap.js is loaded.');
+                console.log(window.Echo); 
+            }
+        });
+    </script> -->
+</body>
 
 </html>
