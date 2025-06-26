@@ -41,6 +41,7 @@ type sensorForm = {
 const components = () => {
     const [sensors, setSensors] = useState<Components[]>([]);
     const [addModal, setAddModal] = useState(false);
+    const [viewSensor, setViewSensor] = useState<Components | null>(null);
     const [showMapLayout, setMapLayout] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm<Required<sensorForm>>({
         sensor_name: '',
@@ -105,17 +106,6 @@ const components = () => {
         }
     }
 
-    const ping = async (sensorID: number, ipAddress: string) => {
-        try {
-            const response = await fetch(route('ping-sensor') + `?sensorID=${sensorID}&ipAddress=${encodeURIComponent(ipAddress)}`);
-            const data = await response.json();
-            data.success ? toast.success(data.message) : toast.error(data.message)
-            fetchSensors();
-        } catch (e) {
-            const errorMessage = e instanceof Error ? e.message : String(e);
-            toast.error(errorMessage);
-        }
-    }
 
     return (
         <>
@@ -155,7 +145,7 @@ const components = () => {
                                     <tr key={components.sensorID} className='hover:bg-gray-100 dark:hover:bg-gray-800 transition'>
                                         <td className='px-6 py-4 text-center whitespace-nowrap text-sm text-gray-900 dark:text-gray-100'>{components.sensorID}</td>
                                         <td className='px-6 py-4 text-center whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white'>{components.sensor_name}</td>
-                                        <td className='px-6 py-4 text-center whitespace-nowrap text-sm text-gray-500 dark:text-gray-300'>{components.token}</td>
+                                        <td className='px-6 py-4 text-center whitespace-nowrap text-sm text-gray-500 dark:text-gray-300 max-w-[200px] truncate mx-auto'>{components.token}</td>
                                         <td className='px-6 py-4 text-center whitespace-nowrap text-sm text-gray-500 dark:text-gray-300'>{components.sensor_location}</td>
                                         <td className='px-6 py-4 text-center whitespace-nowrap text-sm text-gray-500 dark:text-gray-300'>{components.x_axis}, {components.y_axis}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
@@ -165,7 +155,7 @@ const components = () => {
                                             </div>
                                         </td>
                                         <td className='px-6 py-4  whitespace-nowrap text-sm font-medium flex gap-2 justify-center'>
-                                            <button className='px-2 py-1 rounded text-white bg-green-400 hover:bg-green-900 dark:bg-green-400'>View</button>
+                                            <button className='px-2 py-1 rounded text-white bg-green-400 hover:bg-green-900 dark:bg-green-400' onClick={() => setViewSensor(components)}>View</button>
                                             <button className='px-2 py-1 rounded text-white bg-indigo-400 hover:bg-indigo-900 dark:bg-indigo-400'>Edit</button>
                                             <button className='px-2 py-1 rounded text-white bg-red-400 hover:bg-red-900 dark:bg-red-400'>Remove</button>
                                         </td>
@@ -263,8 +253,31 @@ const components = () => {
             } />
 
             <MapPreview topcoordination={data.y_axis + '%'} leftcoordination={data.x_axis + '%'} isVisible={showMapLayout} onclose={() => setMapLayout(false)}>
-
             </MapPreview>
+            <Modal header='View Sensor' subtitle='sample subtitle' isVisible={viewSensor !== null} onClose={() => setViewSensor(null)} children={
+                <>
+                    {
+                        viewSensor && (
+                            <div className='w-85 gap-3 inline-flex text-sm'>
+                                <div className='w-60 flex flex-col text-end font-semibold gap-1'>
+                                    <span>Sensor Name : </span>
+                                    <span>Sensor Location : </span>
+                                    <span>Sensor Status : </span>
+                                    <span>Sensor Token : </span>
+                                </div>
+                                <div className='flex flex-col gap-1'>
+                                    <span className='truncate w-50'>{viewSensor.sensor_name}</span>
+                                    <span className='truncate w-50'>{viewSensor.sensor_location}</span>
+                                    <span className='truncate w-50'>{viewSensor.status}</span>
+                                    <span className='truncate w-50'>{viewSensor.token}</span>
+                                </div>
+                            </div>
+                            
+                        )
+                    }
+                </>
+            } />
+
         </>
     )
 }

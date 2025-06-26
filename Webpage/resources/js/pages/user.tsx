@@ -3,8 +3,8 @@ import { notifyPromise } from '@/components/custom/toast';
 import Modal from '@/components/custom/universal-modal';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout'
-import { BreadcrumbItem } from '@/types';
-import { Head, useForm } from '@inertiajs/react';
+import { BreadcrumbItem, SharedData } from '@/types';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { Label } from '@radix-ui/react-label';
 import { User2Icon } from 'lucide-react';
 import { resolve } from 'path';
@@ -36,9 +36,10 @@ type userForm = {
 
 
 const user = () => {
-
+    const { auth } = usePage<SharedData>().props;
     const [userList, setUsers] = useState<User[]>([]);
     const [addUser, setAddUser] = useState(false);
+    const [viewUser, setViewUser] = useState<User | null>(null);
     const { data, setData, post, processing, errors, reset } = useForm<Required<userForm>>({
         name: '',
         email: '',
@@ -130,9 +131,9 @@ const user = () => {
                                         <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300'>{user.email}</td>
                                         <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300'>{user.role}</td>
                                         <td className='px-6 py-4  whitespace-nowrap text-sm font-medium flex gap-2 justify-center'>
-                                            <button className='px-2 py-1 rounded text-white bg-green-400 hover:bg-green-900 dark:bg-green-400'>View</button>
+                                            <button className='px-2 py-1 rounded text-white bg-green-400 hover:bg-green-900 dark:bg-green-400' onClick={() => setViewUser(user)}>View</button>
                                             <button className='px-2 py-1 rounded text-white bg-indigo-400 hover:bg-indigo-900 dark:bg-indigo-400'>Edit</button>
-                                            {user.role === 'admin' ? <></> : <button className='px-2 py-1 rounded text-white bg-red-400 hover:bg-red-900 dark:bg-red-400'>Remove</button>}
+                                            {user.role === 'admin' || auth.user.role === 'User' ? <></> : <button className='px-2 py-1 rounded text-white bg-red-400 hover:bg-red-900 dark:bg-red-400'>Remove</button>}
                                         </td>
                                     </tr>
                                 ))}
@@ -228,6 +229,26 @@ const user = () => {
                             </div>
                         </div>
                     </form>
+                </>
+            }>
+            </Modal>
+
+            <Modal header='View User' subtitle='sample' isVisible={viewUser !== null} onClose={() => setViewUser(null)} children={
+                <>
+                    {viewUser && (
+                        <div className='w-80 gap-3 inline-flex text-sm'>
+                            <div className='flex flex-col text-end font-semibold'>
+                                <span>Fullname : </span>
+                                <span>Email : </span>
+                                <span>Role : </span>
+                            </div>
+                            <div className='flex flex-col'>
+                                <span>{viewUser.name}</span>
+                                <span>{viewUser.email}</span>
+                                <span>{viewUser.role}</span>
+                            </div>
+                        </div>
+                    )}
                 </>
             }>
             </Modal>

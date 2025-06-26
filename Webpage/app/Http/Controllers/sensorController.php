@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\AssignToClassEvent;
 use App\Models\sensor;
 use App\Models\sensorData;
 use App\Models\sensorThresholds;
@@ -41,12 +42,10 @@ class sensorController extends Controller
 
         return redirect()->back()->with('success', 'Sensor added successfully.');
     }
-
     public function fetch()
     {
         return Sensor::all();
     }
-
     public function fetchReadings()
     {
         $readings = SensorData::with('sensor') // eager load sensor data
@@ -132,7 +131,7 @@ class sensorController extends Controller
         $sensor = Sensor::where('token', $token)->first();
 
         if (!$sensor) {
-            return response()->json(['success' => false, 'message' => 'Sensor not found'], 404);
+            return response()->json(['error' => false, 'message' => 'Sensor not found'], 404);
         }
 
         $sensor->update([
@@ -149,6 +148,8 @@ class sensorController extends Controller
             'time' => now()->format('H:i:s'),
             'date' => now()->format('Y-m-d'),
         ]);
+
+        // event(new AssignToClassEvent());
 
         return response()->json(['success' => true, 'message' => 'Heartbeat and readings saved']);
 
