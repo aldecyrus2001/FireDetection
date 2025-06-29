@@ -27,7 +27,7 @@ type Components = {
     x_axis: number;
     y_axis: number;
     status: string;
-    isAlert: number;
+    isAlert: boolean;
 }
 
 type sensorForm = {
@@ -137,6 +137,7 @@ const components = () => {
                                     <th className='px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>Location</th>
                                     <th className='px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>Coordination X, Y</th>
                                     <th className='px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>Status</th>
+                                    <th className='px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>Connection</th>
                                     <th className='px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>Action</th>
                                 </tr>
                             </thead>
@@ -150,10 +151,16 @@ const components = () => {
                                         <td className='px-6 py-4 text-center whitespace-nowrap text-sm text-gray-500 dark:text-gray-300'>{components.x_axis}, {components.y_axis}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                                             <div className="flex items-center justify-center gap-2">
+                                                {components.isAlert == true ? 'Alert' : 'Safe'}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                                            <div className="flex items-center justify-center gap-2">
                                                 <MdCircle className={components.status == 'Online' ? 'text-green-500' : 'text-red-500'} />
                                                 {components.status}
                                             </div>
                                         </td>
+
                                         <td className='px-6 py-4  whitespace-nowrap text-sm font-medium flex gap-2 justify-center'>
                                             <button className='px-2 py-1 rounded text-white bg-green-400 hover:bg-green-900 dark:bg-green-400' onClick={() => setViewSensor(components)}>View</button>
                                             <button className='px-2 py-1 rounded text-white bg-indigo-400 hover:bg-indigo-900 dark:bg-indigo-400'>Edit</button>
@@ -272,7 +279,7 @@ const components = () => {
                                     <span className='truncate w-50'>{viewSensor.token}</span>
                                 </div>
                             </div>
-                            
+
                         )
                     }
                 </>

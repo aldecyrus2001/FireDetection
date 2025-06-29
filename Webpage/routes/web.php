@@ -6,6 +6,7 @@ use App\Http\Controllers\messageController;
 use App\Http\Controllers\sensorController;
 use App\Http\Controllers\userController;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -48,13 +49,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('message', function () {
         return Inertia::render('message');
     })->name('message');
-    Route::get('get-messages', [messageController:: class, 'getMessages'])->name('get-messages');
-    Route::post('add-message', [messageController::class, 'createMessage']) -> name('add-message');
+    Route::get('get-messages', [messageController::class, 'getMessages'])->name('get-messages');
+    Route::post('add-message', [messageController::class, 'createMessage'])->name('add-message');
 
     Route::post('sensor/data', [sensorController::class, 'fetch_sensor_data'])
         ->name('fetch.sensor.data');
 
-    Broadcast::channel('public-alert', function() {
+    Broadcast::channel('public-alert', function () {
         return true;
     });
 });

@@ -20,12 +20,14 @@ type Contact = {
     id: number;
     name: string,
     phone: string,
+    email: string,
     priority_level: string,
 }
 type contactForm = {
     name: string,
     phone: string,
     priority_level: string,
+    email: string,
 }
 
 const contacts = () => {
@@ -35,7 +37,8 @@ const contacts = () => {
     const { data, setData, post, processing, errors, reset } = useForm<Required<contactForm>>({
         name: '',
         phone: '',
-        priority_level: ''
+        priority_level: '',
+        email: '',
     });
 
     useEffect(() => {
@@ -93,6 +96,7 @@ const contacts = () => {
                                     <th className='px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>#</th>
                                     <th className='px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>Name</th>
                                     <th className='px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>Phone</th>
+                                    <th className='px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>Email Address</th>
                                     <th className='px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>Contact Level</th>
                                     <th className='px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>Action</th>
                                 </tr>
@@ -103,6 +107,7 @@ const contacts = () => {
                                         <td className='px-6 py-4 text-center whitespace-nowrap text-sm text-gray-900 dark:text-gray-100'>{contacts.id}</td>
                                         <td className='px-6 py-4 text-center whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white'>{contacts.name}</td>
                                         <td className='px-6 py-4 text-center whitespace-nowrap text-sm text-gray-500 dark:text-gray-300'>{contacts.phone}</td>
+                                        <td className='px-6 py-4 text-center whitespace-nowrap text-sm text-gray-500 dark:text-gray-300'>{contacts.email}</td>
                                         <td className='px-6 py-4 text-center whitespace-nowrap text-sm text-gray-500 dark:text-gray-300'>{contacts.priority_level}</td>
                                         <td className='px-6 py-4  whitespace-nowrap text-sm font-medium flex gap-2 justify-center'>
                                             <button className='px-2 py-1 rounded text-white bg-green-400 hover:bg-green-900 dark:bg-green-400' onClick={() => setViewContact(contacts)}>View</button>
@@ -149,6 +154,19 @@ const contacts = () => {
                                     />
                                 </div>
                                 <div className="grid gap-2">
+                                    <Label htmlFor="email" className='text-black'>Email Address</Label>
+                                    <Input
+                                        className='text-black'
+                                        id="email"
+                                        type="email"
+                                        required
+                                        tabIndex={2}
+                                        value={data.email}
+                                        onChange={(e) => setData('email', e.target.value)}
+                                        placeholder="Email Address"
+                                    />
+                                </div>
+                                <div className="grid gap-2">
                                     <Label htmlFor="phone" className='text-black'>Priority Level</Label>
                                     <p className='text-xs px-2'>Note: The Priority Level indicates how important a contact is during emergencies—those marked as High will be contacted first in urgent situations, Medium for moderate importance, and Low if others are unavailable or for general updates. Please choose the level that best reflects the contact’s urgency in emergency scenarios.</p>
                                     <Select
@@ -160,7 +178,7 @@ const contacts = () => {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="High">High</SelectItem>
-                                            <SelectItem value="Medium">Medium</SelectItem>
+                                            <SelectItem value="Moderate">Moderate</SelectItem>
                                             <SelectItem value="Low">Low</SelectItem>
                                         </SelectContent>
                                     </Select>

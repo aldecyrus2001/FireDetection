@@ -33,7 +33,10 @@ class userController extends Controller
     }
 
     public function fetch() {
-        event(new AssignToClassEvent('Fetched User'));
         return User::all();
+    }
+
+    public function update(Request $request) {
+        $user = User::find($request->id);
     }
 }
