@@ -36,7 +36,9 @@ class userController extends Controller
         return User::all();
     }
 
-    public function update(Request $request) {
-        $user = User::find($request->id);
+    public function update($id) {
+        $user = User::where('id', $id)->delete();
+
+        return redirect('users')->with('success', 'User Deleted Successfully!');
     }
 }

@@ -1,4 +1,6 @@
 import { Breadcrumbs } from '@/components/breadcrumbs'
+import { CustomButton } from '@/components/custom/button';
+import { ConfirmationModal } from '@/components/custom/confirmation-modal';
 import { notifyPromise } from '@/components/custom/toast';
 import Modal from '@/components/custom/universal-modal';
 import { Input } from '@/components/ui/input';
@@ -6,7 +8,7 @@ import AppLayout from '@/layouts/app-layout'
 import { BreadcrumbItem, SharedData } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { Label } from '@radix-ui/react-label';
-import { User2Icon } from 'lucide-react';
+import { Trash2Icon, User2Icon } from 'lucide-react';
 import { resolve } from 'path';
 import React, { FormEventHandler, useEffect, useState } from 'react'
 import { toast } from 'react-toastify';
@@ -36,6 +38,9 @@ type userForm = {
 
 
 const user = () => {
+    const { flash } = usePage().props;
+    const [deleteModal, setDeleteModal] = useState(false);
+    const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
     const { auth } = usePage<SharedData>().props;
     const [userList, setUsers] = useState<User[]>([]);
     const [addUser, setAddUser] = useState(false);
@@ -97,6 +102,10 @@ const user = () => {
 
     };
 
+    const handleDelete = (userID: number) => {
+        console.log(userID)
+    }
+
     return (
         <>
             <AppLayout breadcrumbs={breadcrumbs}>
@@ -133,7 +142,7 @@ const user = () => {
                                         <td className='px-6 py-4  whitespace-nowrap text-sm font-medium flex gap-2 justify-center'>
                                             <button className='px-2 py-1 rounded text-white bg-green-400 hover:bg-green-900 dark:bg-green-400' onClick={() => setViewUser(user)}>View</button>
                                             <button className='px-2 py-1 rounded text-white bg-indigo-400 hover:bg-indigo-900 dark:bg-indigo-400'>Edit</button>
-                                            {user.role === 'admin' || auth.user.role === 'User' ? <></> : <button className='px-2 py-1 rounded text-white bg-red-400 hover:bg-red-900 dark:bg-red-400'>Remove</button>}
+                                            {user.role === 'admin' || auth.user.role === 'User' ? <></> : <button className='px-2 py-1 rounded text-white bg-red-400 hover:bg-red-900 dark:bg-red-400' onClick={() => {setSelectedUserId(user.id); setDeleteModal(true);}}>Remove</button>}
                                         </td>
                                     </tr>
                                 ))}
@@ -252,6 +261,14 @@ const user = () => {
                 </>
             }>
             </Modal>
+
+            <ConfirmationModal Title='Confirm Deletion' Content='This action cannot be undone. The data will permanently deleted.' onCancle={() => setDeleteModal(false)} onConfirm={() => {
+                if(selectedUserId !== null) {
+                    handleDelete(selectedUserId);
+                    setDeleteModal(false);
+                }
+            }} isVisible={deleteModal}/>
+
         </>
     )
 }
