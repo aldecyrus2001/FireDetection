@@ -13,6 +13,7 @@ import { resolve } from 'path';
 import React, { FormEventHandler, useEffect, useState } from 'react'
 import { toast } from 'react-toastify';
 
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Users Lists',
@@ -38,13 +39,14 @@ type userForm = {
 
 
 const user = () => {
-    const { flash } = usePage().props;
     const [deleteModal, setDeleteModal] = useState(false);
+    const { delete: destroy } = useForm();
     const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
     const { auth } = usePage<SharedData>().props;
     const [userList, setUsers] = useState<User[]>([]);
     const [addUser, setAddUser] = useState(false);
     const [viewUser, setViewUser] = useState<User | null>(null);
+    const [editModal, setEditModal] = useState<User | null>(null);
     const { data, setData, post, processing, errors, reset } = useForm<Required<userForm>>({
         name: '',
         email: '',
@@ -52,6 +54,17 @@ const user = () => {
         confirm_password: '',
         role: 'User'
     });
+
+    const handleEditClick = (user: User) => {
+        setEditModal(user); // open the modal
+        setData({
+            name: user.name,
+            email: user.email,
+            password: '',
+            confirm_password: '',
+            role: user.role,
+        }); // preload the form data
+    };
 
     useEffect(() => {
         fetchUsers();
@@ -102,9 +115,40 @@ const user = () => {
 
     };
 
+    const editUser: FormEventHandler = (e) => {
+        e.preventDefault();
+
+        if (!editModal) return;
+
+        post(route('update-user', editModal.id), {
+            method: 'put',
+            onSuccess: () => {
+                toast.success("User updated successfully!");
+                setEditModal(null);
+                fetchUsers();
+                reset();
+            },
+            onError: (e) => {
+                const errorMessages = Object.values(e).flat();
+                toast.error(errorMessages[0] || "Failed to update user.");
+            },
+        });
+    };
+
+    
     const handleDelete = (userID: number) => {
-        console.log(userID)
-    }
+        destroy(route('delete-user', userID), {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success("User Deleted Successfully!");
+                fetchUsers();
+            },
+            onError: (e) => {
+                const errorMessages = Object.values(e).flat();
+                toast.error(errorMessages[0] || "Failed to delete user.");
+            }
+        });
+    };
 
     return (
         <>
@@ -117,7 +161,10 @@ const user = () => {
                             <p className='text-sm'> Sample Description of this page</p>
                         </div>
                         <div>
-                            <button onClick={() => setAddUser(true)} className='py-2 px-4 cursor-pointer rounded-md bg-green-400 font-semibold flex gap-2'><User2Icon /> Add User</button>
+                            <button onClick={() => {
+                                reset();
+                                setAddUser(true);
+                            }} className='py-2 px-4 cursor-pointer rounded-md bg-green-400 font-semibold flex gap-2'><User2Icon /> Add User</button>
                         </div>
                     </div>
                     <hr className='mt-2 mb-5 border-slate-600' />
@@ -141,8 +188,8 @@ const user = () => {
                                         <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300'>{user.role}</td>
                                         <td className='px-6 py-4  whitespace-nowrap text-sm font-medium flex gap-2 justify-center'>
                                             <button className='px-2 py-1 rounded text-white bg-green-400 hover:bg-green-900 dark:bg-green-400' onClick={() => setViewUser(user)}>View</button>
-                                            <button className='px-2 py-1 rounded text-white bg-indigo-400 hover:bg-indigo-900 dark:bg-indigo-400'>Edit</button>
-                                            {user.role === 'admin' || auth.user.role === 'User' ? <></> : <button className='px-2 py-1 rounded text-white bg-red-400 hover:bg-red-900 dark:bg-red-400' onClick={() => {setSelectedUserId(user.id); setDeleteModal(true);}}>Remove</button>}
+                                            <button className='px-2 py-1 rounded text-white bg-indigo-400 hover:bg-indigo-900 dark:bg-indigo-400' onClick={() => handleEditClick(user)}>Edit</button>
+                                            {user.role === 'admin' || auth.user.role === 'User' ? <></> : <button className='px-2 py-1 rounded text-white bg-red-400 hover:bg-red-900 dark:bg-red-400' onClick={() => { setSelectedUserId(user.id); setDeleteModal(true); }}>Remove</button>}
                                         </td>
                                     </tr>
                                 ))}
@@ -178,8 +225,7 @@ const user = () => {
                                         id="email"
                                         type="email"
                                         required
-                                        autoFocus
-                                        tabIndex={1}
+                                        tabIndex={2}
                                         value={data.email}
                                         onChange={(e) => setData('email', e.target.value)}
                                         placeholder="Email"
@@ -193,8 +239,7 @@ const user = () => {
                                         id="role"
                                         type="text"
                                         required
-                                        autoFocus
-                                        tabIndex={1}
+                                        tabIndex={3}
                                         value={data.role}
                                         placeholder="Role"
                                         disabled
@@ -208,8 +253,7 @@ const user = () => {
                                         id="password"
                                         type="password"
                                         required
-                                        autoFocus
-                                        tabIndex={1}
+                                        tabIndex={4}
                                         value={data.password}
                                         onChange={(e) => setData('password', e.target.value)}
                                         placeholder="Password"
@@ -223,8 +267,7 @@ const user = () => {
                                         id="confirm_password"
                                         type="password"
                                         required
-                                        autoFocus
-                                        tabIndex={1}
+                                        tabIndex={5}
                                         value={data.confirm_password}
                                         onChange={(e) => setData('confirm_password', e.target.value)}
                                         placeholder="Confirm Password"
@@ -262,12 +305,72 @@ const user = () => {
             }>
             </Modal>
 
+            <Modal header='Edit User' subtitle='sample' isVisible={editModal !== null} onClose={() => setEditModal(null)} children={
+                <>
+                    {editModal && (
+                        <form onSubmit={editUser}>
+                            <div className='overflow-x-auto p-4'>
+                                <div className="grid grid-cols-1 gap-4 w-100">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="fullname" className='text-black'>Full Name</Label>
+                                        <Input
+                                            className='text-black'
+                                            id="fullname"
+                                            type="text"
+                                            required
+                                            autoFocus
+                                            tabIndex={1}
+                                            value={data.name}
+                                            onChange={(e) => setData('name', e.target.value)}
+                                            placeholder="Full Name"
+                                        />
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="email" className='text-black'>Email</Label>
+                                        <Input
+                                            className='text-black'
+                                            id="email"
+                                            type="email"
+                                            required
+                                            tabIndex={2}
+                                            value={data.email}
+                                            onChange={(e) => setData('email', e.target.value)}
+                                            placeholder="Email"
+                                        />
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="role" className='text-black'>Role</Label>
+                                        <Input
+                                            className='text-black'
+                                            id="role"
+                                            type="text"
+                                            required
+                                            tabIndex={3}
+                                            value={data.role}
+                                            placeholder="Role"
+                                            disabled
+                                        />
+                                    </div>
+                                </div>
+                                <div className="mt-10 w-full bottom-10 right-10 flex flex-col sm:flex-row gap-2 sm:gap-4 justify-end">
+                                    <button className="cursor-pointer bg-gray-500 text-white py-2 px-4 rounded-md" onClick={() => { setEditModal(null); reset(); }}>Cancel</button>
+                                    <button type='submit' className="cursor-pointer bg-blue-500 text-white py-2 px-4 rounded-md">Save</button>
+                                </div>
+                            </div>
+                        </form>
+                    )}
+                </>
+            }>
+            </Modal>
+
             <ConfirmationModal Title='Confirm Deletion' Content='This action cannot be undone. The data will permanently deleted.' onCancle={() => setDeleteModal(false)} onConfirm={() => {
-                if(selectedUserId !== null) {
+                if (selectedUserId !== null) {
                     handleDelete(selectedUserId);
                     setDeleteModal(false);
                 }
-            }} isVisible={deleteModal}/>
+            }} isVisible={deleteModal} />
 
         </>
     )
