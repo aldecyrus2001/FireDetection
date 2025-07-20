@@ -202,13 +202,16 @@ const contacts = () => {
             >
                 {viewContact && (
                     <div className=' text-black space-y-4 w-100'>
-                        <div>
+                        <div className='m-0'>
                             <Label>Name: {viewContact.name}</Label>
                         </div>
-                        <div>
+                        <div className='m-0'>
                             <Label>Phone: {viewContact.phone}</Label>
                         </div>
-                        <div>
+                        <div className='m-0'>
+                            <Label>Email: {viewContact.email}</Label>
+                        </div>
+                        <div className='m-0'>
                             <Label>Priority Level: {viewContact.priority_level}</Label>
                         </div>
                     </div>

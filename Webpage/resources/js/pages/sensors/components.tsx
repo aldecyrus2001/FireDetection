@@ -389,9 +389,6 @@ const components = () => {
                                     <span className='truncate w-50'>{viewSensor.token}</span>
                                 </div>
                             </div>
-
-
-
                         )
                     }
                 </>
