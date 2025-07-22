@@ -13,12 +13,19 @@ class contactController extends Controller
            'name' => 'required|string',
            'phone' => 'required|string',
            'priority_level' => 'required|string',
+           'email' => 'required|email',
            
         ]);
 
         if (contacts::where('phone', $request->phone)->exists()) {
             return redirect()->back()->withErrors([
                 'phone' => 'Phone number is already registered.'
+            ])->withInput();
+        }
+
+        if (contacts::where('email', $request->email)->exists()) {
+            return redirect()->back()->withErrors([
+                'email' => 'Email address is already registered.'
             ])->withInput();
         }
 

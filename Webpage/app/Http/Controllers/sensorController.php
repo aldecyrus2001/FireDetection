@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\AssignToClassEvent;
+use App\Mail\AlertMail;
+use App\Models\contacts;
 use App\Models\sensor;
 use App\Models\sensorData;
 use App\Models\sensorThresholds;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-
+use Illuminate\Support\Facades\Mail;
 use Nette\Schema\Elements\Structure;
 use Predis\Command\Redis\Json\JSONDEL;
 
@@ -93,7 +97,7 @@ class sensorController extends Controller
             'smoke_value' => $request->smoke_value,
             'fire_value' => $request->fire_value,
         ]);
-        
+
         return redirect()->back()->with('success', 'Threshold updated successfully.');
     }
 
@@ -148,8 +152,84 @@ class sensorController extends Controller
             'date' => now()->format('Y-m-d'),
         ]);
 
+        $threshold = sensorThresholds::find(1);
+        $LPG = $request->input('LPG');
+        $CO = $request->input('CO');
+        $Smoke = $request->input('Smoke');
+        $Fire = $request->input('Fire');
 
-        return response()->json(['success' => true, 'message' => 'Heartbeat and readings saved']);
+
+        $level = 'Neutral';
+
+        if ($LPG > ($threshold->lpg_value + 40) || $CO > ($threshold->co_value + 40) || $Smoke > ($threshold->smoke_value + 40) || $Fire == 1) {
+            $level = "High";
+        } elseif ($LPG > ($threshold->lpg_value + 10) || $CO > ($threshold->co_value + 10) || $Smoke > ($threshold->smoke_value + 10)) {
+            $level = "Moderate";
+        } elseif ($LPG >= $threshold->lpg_value || $CO >= $threshold->co_value || $Smoke >= $threshold->smoke_value) {
+            $level = "Low";
+        }
+
+        $coordinate = [
+            'sensor' => $sensor->sensor_name,
+            'top' => (float) $sensor->x_axis,
+            'left' => (float) $sensor->y_axis,
+            'level' => $level
+        ];
+
+        $coordinates = Cache::get('active_coordinates', []);
+        $coordinates = array_filter($coordinates, fn($coord) => $coord['sensor'] !== $sensor->name);
+        $coordinates[] = $coordinate;
+        Cache::put('active_coordinates', $coordinates, now()->addMinutes(5));
+
+
+        if ($level !== 'Neutral') {
+            if ($sensor->isAlert === false) {
+                $sensor->update([
+                    'isAlert' => true,
+                ]);
+            }
+            Cache::put('active_coordinates', array_values($coordinates), now()->addMinutes(5));
+            event(new AssignToClassEvent($coordinates));
+            $key = 'last_email_sent_' . $sensor->sensorID;
+            $lastEmailSent = Cache::get($key);
+
+            $priorityContacts = [];
+
+            if (!$lastEmailSent || now()->diffInMinutes($lastEmailSent) >= 5) {
+
+                if ($level == "High") {
+                    $priorityContacts = contacts::whereNotNull('email')->get();
+                } else if ($level == "Moderate") {
+                    $priorityContacts = contacts::whereNotNull('email')
+                        ->whereIn('priority_level', ['Moderate', 'Low'])
+                        ->get();
+                } else {
+                    $priorityContacts = contacts::whereNotNull('email')
+                        ->where('priority_level', 'Low')
+                        ->get();
+                }
+
+                foreach ($priorityContacts as $contact) {
+                    Mail::to($contact->email)->send(
+                        new AlertMail($sensor->sensor_name, $level, $LPG, $CO, $Smoke, $Fire)
+                    );
+                }
+                
+                Cache::put($key, now(), now()->addMinutes(5));
+            }
+        } else {
+            if ($sensor->isAlert === true) {
+                $sensor->update([
+                    'isAlert' => false,
+                ]);
+            }
+            $coordinates = Cache::get('active_coordinates', []);
+            $coordinates = array_filter($coordinates, fn($coord) => $coord['sensor'] !== $sensor->sensor_name);
+            Cache::put('active_coordinates', array_values($coordinates), now()->addMinutes(5));
+            // Cache::forget('active_coordinates');
+        }
+
+        return response()->json(['success' => true, 'message' => 'Heartbeat and readings saved', 'Object' => $coordinate]);
 
         // Request Structure "POST"
         // URL = "http://127.0.0.1:8000/api/sensor/heartbeat"
@@ -161,6 +241,5 @@ class sensorController extends Controller
         //     "Fire" : 0,
         //     "token" : "192.168.211.253"
         // }
-
     }
 }

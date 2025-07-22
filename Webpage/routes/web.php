@@ -6,6 +6,7 @@ use App\Http\Controllers\messageController;
 use App\Http\Controllers\sensorController;
 use App\Http\Controllers\userController;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -14,23 +15,32 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
 
+    // USER
     Route::get('users', function () {
         return Inertia::render('user');
     })->name('users');
     Route::post('submit-user', [userController::class, 'addUser'])->name('submit-user');
     Route::get('fetch-users', [userController::class, 'fetch'])->name('fetch-users');
+<<<<<<< HEAD
     Route::put('update-user/{id}', [userController::class, 'updateUser'])->name('update-user');
     Route::delete('delete-user/{id}', [userController::class, 'deleteUser'])-> name('delete-user');
+=======
+    Route::post('update-user/{id}', [UserController::class, 'updateUser'])->name('update-user');
+    Route::delete('delete-user/{id}', [UserController::class, 'deleteUser'])->name('delete-user');
+>>>>>>> 2c8d97afb56158ff6fd4ae7f733c0d3965bb1202
 
+    // COMPONENT
     Route::get('components', function () {
         return Inertia::render('sensors/components');
     })->name('components');
     Route::post('submit-sensor', [sensorController::class, 'addSensor'])->name('submit-sensor');
-    Route::get('fetch-sensors', [sensorController::class, 'fetch'])->name('fetch-sensors');
+    Route::get('fetch-sensors', [sensorController::class, 'fetch'])->name('fetch-sensors');    
     Route::get('fetch-readings', [sensorController::class, 'fetchReadings'])->name('fetch-readings');
     Route::get('fetch-threshold', [sensorController::class, 'fetchThreshold'])->name('fetch-threshold');
     Route::put('update-threshold', [sensorController::class, 'updateThreshold'])->name('update-threshold');
     Route::get('fetch-dashboards-widgets', [dashboardController::class, 'fetch'])->name('fetch-dashboards-widgets');
+    Route::post('sensor/data', [sensorController::class, 'fetch_sensor_data'])
+        ->name('fetch.sensor.data');
     // Route::get('ping-sensor', [sensorController::class, 'ping'])->name('ping-sensor');
 
     Route::get('readings', function () {
@@ -41,22 +51,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('logs');
 
 
+    // CONTACT
     Route::get('contact-list', function () {
         return Inertia::render('contacts');
     })->name('contacts');
     Route::post('add-contact', [contactController::class, 'addContact'])->name('add-contact');
     Route::get('get-contacts', [contactController::class, 'fetchContacts'])->name('get-contacts');
 
+    // MESSAGE
     Route::get('message', function () {
         return Inertia::render('message');
     })->name('message');
-    Route::get('get-messages', [messageController:: class, 'getMessages'])->name('get-messages');
-    Route::post('add-message', [messageController::class, 'createMessage']) -> name('add-message');
+    Route::get('get-messages', [messageController::class, 'getMessages'])->name('get-messages');
+    Route::post('add-message', [messageController::class, 'createMessage'])->name('add-message');
 
-    Route::post('sensor/data', [sensorController::class, 'fetch_sensor_data'])
-        ->name('fetch.sensor.data');
-
-    Broadcast::channel('public-alert', function() {
+    // BROADCAST
+    Broadcast::channel('public-alert', function () {
         return true;
     });
 });

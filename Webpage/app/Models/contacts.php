@@ -15,6 +15,7 @@ class contacts extends Model
         'name',
         'phone',
         'priority_level',
+        'email',
     ];
 
     

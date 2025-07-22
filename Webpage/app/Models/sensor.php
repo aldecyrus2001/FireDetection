@@ -26,6 +26,7 @@ class Sensor extends Model
     protected $casts = [
         'x_axis' => 'float',
         'y_axis' => 'float',
+        'isAlert' => 'boolean',
     ];
 
     public function readings()

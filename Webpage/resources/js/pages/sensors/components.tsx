@@ -27,7 +27,7 @@ type Components = {
     x_axis: number;
     y_axis: number;
     status: string;
-    isAlert: number;
+    isAlert: boolean;
 }
 
 type sensorForm = {
@@ -42,6 +42,7 @@ type sensorForm = {
 const Components = () => {
     const [sensors, setSensors] = useState<Components[]>([]);
     const [addModal, setAddModal] = useState(false);
+    const [editModal, setEditModal] = useState<Components | null>(null);
     const [viewSensor, setViewSensor] = useState<Components | null>(null);
     const [updateSensor, setUpdateSensor] = useState<Components | null>(null);
     const [showMapLayout, setMapLayout] = useState(false);
@@ -137,6 +138,17 @@ const Components = () => {
         }
     };
 
+    const handleEditClick = (components: Components) => {
+        setEditModal(components);
+        setData({
+            sensor_name: components.sensor_name,
+            token: components.token,
+            sensor_location: components.sensor_location,
+            x_axis: components.x_axis,
+            y_axis: components.y_axis
+        });
+    }
+
 
     return (
         <>
@@ -168,6 +180,7 @@ const Components = () => {
                                     <th className='px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>Location</th>
                                     <th className='px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>Coordination X, Y</th>
                                     <th className='px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>Status</th>
+                                    <th className='px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>Connection</th>
                                     <th className='px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>Action</th>
                                 </tr>
                             </thead>
@@ -181,13 +194,33 @@ const Components = () => {
                                         <td className='px-6 py-4 text-center whitespace-nowrap text-sm text-gray-500 dark:text-gray-300'>{components.x_axis}, {components.y_axis}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                                             <div className="flex items-center justify-center gap-2">
+                                                {components.isAlert == true ? 'Alert' : 'Safe'}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                                            <div className="flex items-center justify-center gap-2">
                                                 <MdCircle className={components.status == 'Online' ? 'text-green-500' : 'text-red-500'} />
                                                 {components.status}
                                             </div>
                                         </td>
+
                                         <td className='px-6 py-4  whitespace-nowrap text-sm font-medium flex gap-2 justify-center'>
                                             <button className='px-2 py-1 rounded text-white bg-green-400 hover:bg-green-900 dark:bg-green-400' onClick={() => setViewSensor(components)}>View</button>
+<<<<<<< HEAD
                                             <button className='px-2 py-1 rounded text-white bg-indigo-400 hover:bg-indigo-900 dark:bg-indigo-400' onClick={() => onEditSensor(components)}>Edit</button>
+=======
+                                            <button className='px-2 py-1 rounded text-white bg-blue-400 hover:bg-green-900 dark:bg-green-400' onClick={() => handleEditClick(components)}>Edit</button>
+                                            <button
+                                                className="px-2 py-1 rounded text-white bg-indigo-400 hover:bg-indigo-900 dark:bg-indigo-400"
+                                                onClick={() => {
+                                                    setData('x_axis', String(components.x_axis));
+                                                    setData('y_axis', String(components.y_axis));
+                                                    setMapLayout(true);
+                                                }}
+                                            >
+                                                Locate
+                                            </button>
+>>>>>>> 2c8d97afb56158ff6fd4ae7f733c0d3965bb1202
                                             <button className='px-2 py-1 rounded text-white bg-red-400 hover:bg-red-900 dark:bg-red-400'>Remove</button>
                                         </td>
                                     </tr>
@@ -283,12 +316,104 @@ const Components = () => {
                 </>
             } />
 
+<<<<<<< HEAD
             <MapPreview
                 topcoordination={previewCoord.y + '%'}
                 leftcoordination={previewCoord.x + '%'}
                 isVisible={showMapLayout}
                 onclose={() => setMapLayout(false)}
             />
+=======
+            <Modal header='Edit Sensor' subtitle='sample' isVisible={editModal !== null} onClose={() => {setEditModal(null); reset();}} children={
+                <>
+                    {editModal && (
+                        <form>
+                            <div className='overflow-x-auto p-4'>
+                                <div className="grid grid-cols-1 gap-4 w-100">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="sensor_name" className='text-black'>Sensor Name</Label>
+                                        <Input
+                                            className='text-black'
+                                            id="sensor_name"
+                                            type="text"
+                                            required
+                                            autoFocus
+                                            tabIndex={1}
+                                            value={data.sensor_name}
+                                            onChange={(e) => setData('sensor_name', e.target.value)}
+                                            placeholder="Sensor Name"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="sensor_location" className='text-black'>Sensor Location</Label>
+                                        <Input
+                                            className='text-black'
+                                            id="sensor_location"
+                                            type="text"
+                                            required
+                                            tabIndex={2}
+                                            value={data.sensor_location}
+                                            onChange={(e) => setData('sensor_location', e.target.value)}
+                                            placeholder="Sensor Location"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="token" className='text-black'>Sensor Token</Label>
+                                        <Input
+                                            className='text-black'
+                                            id="token"
+                                            type="text"
+                                            required
+                                            tabIndex={3}
+                                            value={data.token}
+                                            onChange={(e) => setData('token', e.target.value)}
+                                            placeholder="Sensor Token"
+                                        />
+                                    </div>
+                                    <div className='inline-flex gap-2'>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="x_axis" className='text-black'>X Axis</Label>
+                                            <Input
+                                                className='text-black'
+                                                id="x_axis"
+                                                type="text"
+                                                required
+                                                tabIndex={4}
+                                                value={data.x_axis}
+                                                onChange={(e) => setData('x_axis', e.target.value)}
+                                                placeholder="X Axis"
+                                            />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="y_axis" className='text-black'>Y Axis</Label>
+                                            <Input
+                                                className='text-black'
+                                                id="y_axis"
+                                                type="text"
+                                                required
+                                                tabIndex={5}
+                                                value={data.y_axis}
+                                                onChange={(e) => setData('y_axis', e.target.value)}
+                                                placeholder="Y Axis"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="mt-10 w-full bottom-10 right-10 flex flex-col sm:flex-row gap-2 sm:gap-4 justify-end">
+                                    <button className="cursor-pointer bg-gray-500 text-white py-2 px-4 rounded-md" onClick={() => { setEditModal(null); reset(); }}>Cancel</button>
+                                    <button type='button' className="cursor-pointer bg-green-500 text-white py-2 px-4 rounded-md" onClick={() => showMapPreview(data.x_axis, data.y_axis)}>Map Preview</button>
+                                    <button type='submit' className="cursor-pointer bg-blue-500 text-white py-2 px-4 rounded-md">Save</button>
+                                </div>
+                            </div>
+                        </form>
+                    )}
+                </>
+            }>
+            </Modal>
+
+            <MapPreview topcoordination={data.y_axis + '%'} leftcoordination={data.x_axis + '%'} isVisible={showMapLayout} onclose={() => {setMapLayout(false);}}>
+            </MapPreview>
+>>>>>>> 2c8d97afb56158ff6fd4ae7f733c0d3965bb1202
 
             <Modal header='View Sensor' subtitle='sample subtitle' isVisible={viewSensor !== null} onClose={() => setViewSensor(null)} children={
                 <>
@@ -308,7 +433,10 @@ const Components = () => {
                                     <span className='truncate w-50'>{viewSensor.token}</span>
                                 </div>
                             </div>
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2c8d97afb56158ff6fd4ae7f733c0d3965bb1202
                         )
                     }
                 </>
