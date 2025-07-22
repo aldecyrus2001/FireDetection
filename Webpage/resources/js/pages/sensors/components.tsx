@@ -31,6 +31,7 @@ type Components = {
 }
 
 type sensorForm = {
+    sensorID?: number;
     sensor_name: string;
     token: string;
     sensor_location: string;
@@ -38,18 +39,44 @@ type sensorForm = {
     y_axis: any;
 }
 
-const components = () => {
+const Components = () => {
     const [sensors, setSensors] = useState<Components[]>([]);
     const [addModal, setAddModal] = useState(false);
     const [viewSensor, setViewSensor] = useState<Components | null>(null);
+    const [updateSensor, setUpdateSensor] = useState<Components | null>(null);
     const [showMapLayout, setMapLayout] = useState(false);
-    const { data, setData, post, processing, errors, reset } = useForm<Required<sensorForm>>({
+    const [previewCoord, setPreviewCoord] = useState<{ x: string, y: string }>({ x: '', y: '' });
+    const [previewSource, setPreviewSource] = useState<'add' | 'update' | null>(null);
+    const { data: createData, setUpdateData: setCreateData, post, processing: creating, errors: createErrors, reset: resetCreateForm } = useForm<sensorForm>({
         sensor_name: '',
         token: '',
         sensor_location: '',
         x_axis: '',
         y_axis: ''
     });
+
+
+    const { data: updateData, setData: setUpdateData, put, processing: updating, reset: resetUpdateForm, errors: updateErrors } = useForm<sensorForm>({
+        sensorID: 0,
+        sensor_name: '',
+        token: '',
+        sensor_location: '',
+        x_axis: 0,
+        y_axis: 0,
+    })
+
+    const onEditSensor = (sensor: Sensor) => {
+        setUpdateData({
+            sensorID: sensor.sensorID,
+            sensor_name: sensor.sensor_name,
+            token: sensor.token,
+            sensor_location: sensor.sensor_location,
+            x_axis: sensor.x_axis,
+            y_axis: sensor.y_axis,
+        });
+        setUpdateSensor(sensor); // this will control the modal visibility
+
+    };
 
     useEffect(() => {
         fetchSensors();
@@ -80,7 +107,7 @@ const components = () => {
                     reject(e);
                 },
                 onFinish: () => {
-                    reset();
+                    resetCreateForm();
                     setAddModal(false);
                     fetchSensors();
                 }
@@ -95,16 +122,20 @@ const components = () => {
         );
     };
 
-    const showMapPreview = (x: string, y: string) => {
+    const showMapPreview = (x: string | number, y: string | number) => {
+        const xStr = String(x);
+        const yStr = String(y);
         const isNumber = (value: string) => /^-?\d*\.?\d+$/.test(value);
-        if (x === '' || y === '') {
+
+        if (xStr === '' || yStr === '') {
             notifyError('Please input data for both the X and Y axis. Thank you!');
-        } else if (!isNumber(x) || !isNumber(y)) {
+        } else if (!isNumber(xStr) || !isNumber(yStr)) {
             notifyError('X and Y must be numeric values only.');
         } else {
+            setPreviewCoord({ x: xStr, y: yStr });  // <-- store values
             setMapLayout(true);
         }
-    }
+    };
 
 
     return (
@@ -156,7 +187,7 @@ const components = () => {
                                         </td>
                                         <td className='px-6 py-4  whitespace-nowrap text-sm font-medium flex gap-2 justify-center'>
                                             <button className='px-2 py-1 rounded text-white bg-green-400 hover:bg-green-900 dark:bg-green-400' onClick={() => setViewSensor(components)}>View</button>
-                                            <button className='px-2 py-1 rounded text-white bg-indigo-400 hover:bg-indigo-900 dark:bg-indigo-400'>Edit</button>
+                                            <button className='px-2 py-1 rounded text-white bg-indigo-400 hover:bg-indigo-900 dark:bg-indigo-400' onClick={() => onEditSensor(components)}>Edit</button>
                                             <button className='px-2 py-1 rounded text-white bg-red-400 hover:bg-red-900 dark:bg-red-400'>Remove</button>
                                         </td>
                                     </tr>
@@ -180,8 +211,8 @@ const components = () => {
                                         required
                                         autoFocus
                                         tabIndex={1}
-                                        value={data.sensor_name}
-                                        onChange={(e) => setData('sensor_name', e.target.value)}
+                                        value={createData.sensor_name}
+                                        onChange={(e) => setCreateData('sensor_name', e.target.value)}
                                         placeholder="Sensor Name"
                                     />
                                 </div>
@@ -194,8 +225,8 @@ const components = () => {
                                         required
                                         autoFocus
                                         tabIndex={2}
-                                        value={data.sensor_location}
-                                        onChange={(e) => setData('sensor_location', e.target.value)}
+                                        value={createData.sensor_location}
+                                        onChange={(e) => setCreateData('sensor_location', e.target.value)}
                                         placeholder="Sensor Location"
                                     />
                                 </div>
@@ -208,8 +239,8 @@ const components = () => {
                                         required
                                         autoFocus
                                         tabIndex={3}
-                                        value={data.token}
-                                        onChange={(e) => setData('token', e.target.value)}
+                                        value={createData.token}
+                                        onChange={(e) => setCreateData('token', e.target.value)}
                                         placeholder="Token"
                                     />
                                 </div>
@@ -222,8 +253,8 @@ const components = () => {
                                         required
                                         autoFocus
                                         tabIndex={4}
-                                        value={data.y_axis}
-                                        onChange={(e) => setData('y_axis', e.target.value)}
+                                        value={createData.y_axis}
+                                        onChange={(e) => setCreateData('y_axis', e.target.value)}
                                         placeholder="Sensor Y Axis Location"
                                     />
                                 </div>
@@ -236,15 +267,15 @@ const components = () => {
                                         required
                                         autoFocus
                                         tabIndex={5}
-                                        value={data.x_axis}
-                                        onChange={(e) => setData('x_axis', e.target.value)}
+                                        value={createData.x_axis}
+                                        onChange={(e) => setCreateData('x_axis', e.target.value)}
                                         placeholder="Sensor X Axis Location"
                                     />
                                 </div>
                             </div>
                             <div className="mt-10 w-full bottom-10 right-10 flex flex-col sm:flex-row gap-2 sm:gap-4 justify-end">
-                                <button className="cursor-pointer bg-gray-500 text-white py-2 px-4 rounded-md" onClick={() => { setAddModal(false); reset(); }}>Cancel</button>
-                                <div className="cursor-pointer bg-red-500 text-white py-2 px-4 rounded-md" onClick={() => showMapPreview(data.x_axis, data.y_axis)}>Map Preview</div>
+                                <button className="cursor-pointer bg-gray-500 text-white py-2 px-4 rounded-md" onClick={() => { setAddModal(false); resetCreateForm(); }}>Cancel</button>
+                                <div className="cursor-pointer bg-red-500 text-white py-2 px-4 rounded-md" onClick={() => showMapPreview(createData.x_axis, createData.y_axis)}>Map Preview</div>
                                 <button type='submit' className="cursor-pointer bg-blue-500 text-white py-2 px-4 rounded-md">Save</button>
                             </div>
                         </div>
@@ -252,8 +283,13 @@ const components = () => {
                 </>
             } />
 
-            <MapPreview topcoordination={data.y_axis + '%'} leftcoordination={data.x_axis + '%'} isVisible={showMapLayout} onclose={() => setMapLayout(false)}>
-            </MapPreview>
+            <MapPreview
+                topcoordination={previewCoord.y + '%'}
+                leftcoordination={previewCoord.x + '%'}
+                isVisible={showMapLayout}
+                onclose={() => setMapLayout(false)}
+            />
+
             <Modal header='View Sensor' subtitle='sample subtitle' isVisible={viewSensor !== null} onClose={() => setViewSensor(null)} children={
                 <>
                     {
@@ -272,14 +308,104 @@ const components = () => {
                                     <span className='truncate w-50'>{viewSensor.token}</span>
                                 </div>
                             </div>
-                            
+
                         )
                     }
                 </>
             } />
 
+            <Modal header='Update Sensor' subtitle='sample' isVisible={updateSensor !== null} onClose={() => setUpdateSensor(null)} children={
+                <>
+                    {updateSensor && updateData && (
+                        <form>
+                            <div className='overflow-x-auto p-4'>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="sensor_name" className='text-black'>Sensor Name</Label>
+                                        <Input
+                                            className='text-black'
+                                            id="sensor_name"
+                                            type="text"
+                                            required
+                                            autoFocus
+                                            tabIndex={1}
+                                            value={updateData.sensor_name}
+                                            onChange={(e) => setUpdateData('sensor_name', e.target.value)}
+                                            placeholder="Sensor Name"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="sensor_location" className='text-black'>Sensor Location</Label>
+                                        <Input
+                                            className='text-black'
+                                            id="sensor_location"
+                                            type="text"
+                                            required
+                                            autoFocus
+                                            tabIndex={2}
+                                            value={updateData.sensor_location}
+                                            onChange={(e) => setUpdateData('sensor_location', e.target.value)}
+                                            placeholder="Sensor Location"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="token" className='text-black'>Sensor Token</Label>
+                                        <Input
+                                            className='text-black'
+                                            id="token"
+                                            type="text"
+                                            required
+                                            autoFocus
+                                            tabIndex={3}
+                                            value={updateData.token}
+                                            onChange={(e) => setUpdateData('token', e.target.value)}
+                                            placeholder="Token"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="y_axis" className='text-black'>Y Axis Location</Label>
+                                        <Input
+                                            className='text-black'
+                                            id="y_axis"
+                                            type="text"
+                                            required
+                                            autoFocus
+                                            tabIndex={4}
+                                            value={updateData.y_axis}
+                                            onChange={(e) => setUpdateData('y_axis', e.target.value)}
+                                            placeholder="Sensor Y Axis Location"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="x_axis" className='text-black'>X Axis Location</Label>
+                                        <Input
+                                            className='text-black'
+                                            id="x_axis"
+                                            type="text"
+                                            required
+                                            autoFocus
+                                            tabIndex={5}
+                                            value={updateData.x_axis}
+                                            onChange={(e) => setUpdateData('x_axis', e.target.value)}
+                                            placeholder="Sensor X Axis Location"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="mt-10 w-full bottom-10 right-10 flex flex-col sm:flex-row gap-2 sm:gap-4 justify-end">
+                                    <button className="cursor-pointer bg-gray-500 text-white py-2 px-4 rounded-md" onClick={() => { setUpdateSensor(null); resetUpdateForm(); }}>Cancel</button>
+                                    <div className="cursor-pointer bg-red-500 text-white py-2 px-4 rounded-md" onClick={() => showMapPreview(updateData.x_axis, updateData.y_axis)}>Map Preview</div>
+                                    <button type='submit' className="cursor-pointer bg-blue-500 text-white py-2 px-4 rounded-md">Update</button>
+                                </div>
+                            </div>
+                        </form>
+                    )}
+
+                </>
+            }>
+            </Modal>
+
         </>
     )
 }
 
-export default components
+export default Components

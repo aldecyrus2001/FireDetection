@@ -19,6 +19,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('users');
     Route::post('submit-user', [userController::class, 'addUser'])->name('submit-user');
     Route::get('fetch-users', [userController::class, 'fetch'])->name('fetch-users');
+    Route::put('update-user/{id}', [userController::class, 'updateUser'])->name('update-user');
+    Route::delete('delete-user/{id}', [userController::class, 'deleteUser'])-> name('delete-user');
 
     Route::get('components', function () {
         return Inertia::render('sensors/components');

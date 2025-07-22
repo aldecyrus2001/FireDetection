@@ -2,13 +2,14 @@ import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
+import { SharedData, type NavItem } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
 import { BookOpen, Contact, Folder, LayoutGrid, Logs, MessageCircleMoreIcon, PanelTopClose, ParkingMeter, User } from 'lucide-react';
 import AppLogo from './app-logo';
 import { MdElectricMeter } from 'react-icons/md';
 
-const mainNavItems: NavItem[] = [
+
+const mainNavItems: (NavItem & { hiddenForRoles?: string[] })[] = [
     {
         title: 'Dashboard',
         href: '/dashboard',
@@ -18,6 +19,7 @@ const mainNavItems: NavItem[] = [
         title: 'Users',
         href: '/users',
         icon: User,
+        hiddenForRoles: ['user'],
     },
     {
         title: 'Components',
@@ -60,6 +62,12 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { auth } = usePage<SharedData>().props; // ✅ Now inside the function component
+
+    const filteredNavItems = mainNavItems.filter(
+        item => !item.hiddenForRoles || !item.hiddenForRoles.includes(auth.user.role)
+    );
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -75,7 +83,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={filteredNavItems} />
             </SidebarContent>
 
             <SidebarFooter>
@@ -85,3 +93,4 @@ export function AppSidebar() {
         </Sidebar>
     );
 }
+
