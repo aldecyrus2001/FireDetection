@@ -32,7 +32,6 @@ class userController extends Controller
         return redirect()->back()->with('success', 'User added successfully!');
     }
 
-<<<<<<< HEAD
     public function updateUser(Request $request, $id)
     {
         $request->validate([
@@ -58,50 +57,20 @@ class userController extends Controller
         return redirect()->back()->with('success', 'User Updated successfully!');
     }
 
-    public function deleteUser($id)
-    {
+    public function deleteUser($id) {
         $user = User::find($id);
 
-        if (!$user) {
-            return response()->json(['error' => 'User not found.'], 404);
-        }
+    if (!$user) {
+        return response()->json(['error' => 'User not found.'], 404);
+    }
 
-        $user->delete();
+    $user->delete();
 
-        return redirect()->back()->with('success', 'User deleted successfully!');
+    return response()->json(['message' => 'User deleted successfully.']);
     }
 
     public function fetch()
     {
-        event(new AssignToClassEvent('Fetched User'));
-=======
-    public function fetch()
-    {
->>>>>>> 2c8d97afb56158ff6fd4ae7f733c0d3965bb1202
         return User::all();
-    }
-
-    public function updateUser(Request $request, $id)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . $id,
-        ]);
-
-        $user = User::findOrFail($id);
-
-        $user->name = $request->name;
-        $user->email = $request->email;
-
-        $user->save();
-
-        return redirect()->back()->with('success', 'User added successfully!');
-    }
-
-    public function deleteUser($id)
-    {
-        $user = User::findOrFail($id);
-        $user->delete();
-        return redirect()->back()->with('success', 'User deleted successfully!');
     }
 }
