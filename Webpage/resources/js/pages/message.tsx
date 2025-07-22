@@ -1,3 +1,5 @@
+import { ActivateModal } from '@/components/custom/activate-modal';
+import { DeleteModal } from '@/components/custom/delete-modal';
 import Modal from '@/components/custom/universal-modal';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -5,7 +7,9 @@ import { Select, SelectItem, SelectTrigger, SelectValue, SelectContent } from '@
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { BreadcrumbItem } from '@/types'
-import { Head, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
+import { create } from 'domain';
+import { AlertCircle } from 'lucide-react';
 import React, { FormEventHandler, useEffect, useState } from 'react'
 import { MdOutlineMessage } from 'react-icons/md';
 import { toast } from 'react-toastify';
@@ -18,10 +22,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 ]
 
 type messageForm = {
+    id?: number,
     title: string,
     content: string,
     priority: string,
-    isActive: boolean,
+    isActive?: boolean,
 }
 
 type messages = {
@@ -32,15 +37,33 @@ type messages = {
 const message = () => {
     const [addMessage, setAddMessage] = useState(false);
     const [viewMessage, setViewMessage] = useState(false);
+    const [updateMessage, setUpdateMessage] = useState<messages | null>(null);
+    const [activateMessage, setActivateMessage] = useState<messages | null>(null);
     const [selectedMessage, setSelectedMessage] = useState<messages | null>(null);
     const [messages, setMessages] = useState<messages[]>([]);
-    const { data, setData, post, processing, errors, reset } = useForm<Required<messageForm>>({
+    const { data: createData, setData: createSetData, post, processing: processingCreate, errors: errrorsCreate, reset: resetCreate } = useForm<messageForm>({
         title: '',
         content: '',
         priority: '',
         isActive: false,
     });
 
+    const { data: updateData, setData: updateSetData, put, processing: processingUpdate, errors: errrorsUpdate, reset: resetUpdate } = useForm<messageForm>({
+        id: 0,
+        title: '',
+        content: '',
+        priority: '',
+    });
+
+    const onEditMessage = (message: messages) => {
+        updateSetData({
+            id: message.id,
+            title: message.title,
+            content: message.content,
+            priority: message.priority,
+        });
+        setUpdateMessage(message);
+    }
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
 
@@ -49,7 +72,7 @@ const message = () => {
             onSuccess: () => {
                 toast.success('Message created successfully!');
                 setAddMessage(false);
-                reset();
+                resetCreate();
                 fetchMessages();
             },
             onError: (errors) => {
@@ -72,6 +95,45 @@ const message = () => {
             const errorMessage = error instanceof Error ? error.message : String(error);
             toast.error(errorMessage);
         }
+    }
+
+    const updateSubmit: FormEventHandler = (e) => {
+        e.preventDefault();
+
+        if (!updateMessage) return;
+
+        put(route('update-message', updateMessage.id), {
+            onSuccess: () => {
+                toast.success("Message updated successfull!");
+            },
+            onError: (e) => {
+                const errorMessages = Object.values(e).flat();
+                toast.error(errorMessages[0] || "Failed to update message");
+            },
+            onFinish: () => {
+                resetUpdate();
+                setUpdateMessage(null);
+                fetchMessages();
+            }
+        });
+    }
+
+    const handleActivate = async () => {
+        if (!activateMessage) return;
+
+        router.put(route('activate-message', activateMessage.id), {}, {
+            onSuccess: () => {
+                toast.success("message activated successfully!");
+            },
+            onError: (e) => {
+                const errorMessages = Object.values(e).flat();
+                toast.error(errorMessages[0] || "Failed to activate message");
+            },
+            onFinish: () => {
+                setActivateMessage(null);
+                fetchMessages();
+            }
+        });
     }
 
     return (
@@ -117,11 +179,11 @@ const message = () => {
                                                     setSelectedMessage(message);
                                                     setViewMessage(true);
                                                 }}>View</button>
-                                            <button className='px-2 py-1 rounded text-white bg-indigo-400 hover:bg-indigo-900 dark:bg-indigo-400'>Edit</button>
+                                            <button className='px-2 py-1 rounded text-white bg-indigo-400 hover:bg-indigo-900 dark:bg-indigo-400' onClick={() => onEditMessage(message)}>Edit</button>
                                             {message.isActive === true ? (
                                                 <></>
                                             ) : (
-                                                <button className='px-2 py-1 rounded text-white bg-blue-400 hover:bg-blue-900 dark:bg-blue-400'>Activate</button>
+                                                <button className='px-2 py-1 rounded text-white bg-blue-400 hover:bg-blue-900 dark:bg-blue-400' onClick={() => setActivateMessage(message)}>Activate</button>
                                             )}
                                         </td>
                                     </tr>
@@ -144,8 +206,8 @@ const message = () => {
                                         type="text"
                                         required
                                         tabIndex={1}
-                                        value={data.title}
-                                        onChange={(e) => setData('title', e.target.value)}
+                                        value={createData.title}
+                                        onChange={(e) => createSetData('title', e.target.value)}
                                         placeholder="Title"
                                     />
                                 </div>
@@ -153,8 +215,8 @@ const message = () => {
                                     <Label htmlFor="priority" className='text-black'>Priority Level</Label>
                                     <p className='text-xs px-2'>Note: The Priority Level indicates how important a contact is during emergencies—those marked as High will be contacted first in urgent situations, Medium for moderate importance, and Low if others are unavailable or for general updates. Please choose the level that best reflects the contact’s urgency in emergency scenarios.</p>
                                     <Select
-                                        value={data.priority}
-                                        onValueChange={(value) => setData('priority', value)}
+                                        value={createData.priority}
+                                        onValueChange={(value) => createSetData('priority', value)}
                                     >
                                         <SelectTrigger id="priority" className="text-black">
                                             <SelectValue placeholder="Select Priority Level" />
@@ -173,7 +235,7 @@ const message = () => {
                                         "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
                                         "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
                                         "min-h-[12rem] resize-y"
-                                    )} value={data.content} onChange={(e) => setData('content', e.target.value)}></textarea>
+                                    )} value={createData.content} onChange={(e) => createSetData('content', e.target.value)}></textarea>
                                 </div>
                             </div>
                             <div className="mt-10 w-full bottom-10 right-10 flex flex-col sm:flex-row gap-2 sm:gap-4 justify-end">
@@ -220,6 +282,62 @@ const message = () => {
                     </>
                 )
             } />
+
+            <Modal header='Update Message' subtitle='sample subtitle' isVisible={updateMessage !== null} onClose={() => setUpdateMessage(null)} children={
+                <>
+                    <form onSubmit={updateSubmit}>
+                        <div className='overflow-x-auto p-4'>
+                            <div className="flex flex-col gap-4 w-200">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="title" className='text-black'>Message Title</Label>
+                                    <Input
+                                        className='text-black'
+                                        id="title"
+                                        type="text"
+                                        required
+                                        tabIndex={1}
+                                        value={updateData.title}
+                                        onChange={(e) => updateSetData('title', e.target.value)}
+                                        placeholder="Title"
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="priority" className='text-black'>Priority Level</Label>
+                                    <p className='text-xs px-2'>Note: The Priority Level indicates how important a contact is during emergencies—those marked as High will be contacted first in urgent situations, Medium for moderate importance, and Low if others are unavailable or for general updates. Please choose the level that best reflects the contact’s urgency in emergency scenarios.</p>
+                                    <Select
+                                        value={updateData.priority}
+                                        onValueChange={(value) => updateSetData('priority', value)}
+                                    >
+                                        <SelectTrigger id="priority" className="text-black">
+                                            <SelectValue placeholder="Select Priority Level" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="High">High</SelectItem>
+                                            <SelectItem value="Medium">Medium</SelectItem>
+                                            <SelectItem value="Low">Low</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="content" className='text-black'>Message Content</Label>
+                                    <textarea placeholder='Meesage Content' name="content" id="content" className={cn(
+                                        "border-input file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+                                        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+                                        "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+                                        "min-h-[12rem] resize-y"
+                                    )} value={updateData.content} onChange={(e) => updateSetData('content', e.target.value)}></textarea>
+                                </div>
+                            </div>
+                            <div className="mt-10 w-full bottom-10 right-10 flex flex-col sm:flex-row gap-2 sm:gap-4 justify-end">
+                                <button className="cursor-pointer bg-gray-500 text-white py-2 px-4 rounded-md" onClick={() => { setUpdateMessage(null); }}>Cancel</button>
+                                <button type='submit' className="cursor-pointer bg-blue-500 text-white py-2 px-4 rounded-md">Save</button>
+                            </div>
+                        </div>
+                    </form>
+                </>
+            } />
+
+            <ActivateModal onClose={() => setActivateMessage(null)} isVisible={activateMessage !== null} onConfirm={handleActivate} />
         </>
     )
 }

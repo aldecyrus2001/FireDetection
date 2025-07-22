@@ -22,7 +22,8 @@ class AlertMail extends Mailable
         public float $lpg,
         public float $co,
         public float $smoke,
-        public int $fire
+        public int $fire,
+        public string $customMessage = ''
     ) {
         //
     }
@@ -51,6 +52,7 @@ class AlertMail extends Mailable
                 'co' => $this->co,
                 'smoke' => $this->smoke,
                 'fire' => $this->fire,
+                'customMessage' => $this->customMessage,
             ]
         );
     }

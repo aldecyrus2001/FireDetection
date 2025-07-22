@@ -31,7 +31,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('fetch-threshold', [sensorController::class, 'fetchThreshold'])->name('fetch-threshold');
     Route::put('update-threshold', [sensorController::class, 'updateThreshold'])->name('update-threshold');
     Route::get('fetch-dashboards-widgets', [dashboardController::class, 'fetch'])->name('fetch-dashboards-widgets');
-    // Route::get('ping-sensor', [sensorController::class, 'ping'])->name('ping-sensor');
+    Route::put('update-sensor/{id}', [sensorController::class, 'updateSensor'])->name('update-sensor');
+    Route::delete('delete-sensor/{id}', [sensorController::class, 'deleteSensor'])->name('delete-sensor');
 
     Route::get('readings', function () {
         return Inertia::render('readings');
@@ -46,13 +47,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('contacts');
     Route::post('add-contact', [contactController::class, 'addContact'])->name('add-contact');
     Route::get('get-contacts', [contactController::class, 'fetchContacts'])->name('get-contacts');
+    Route::put('update-contact/{id}', [contactController::class, 'updateContact'])->name('update-contact');
+    Route::delete('delete-contact/{id}', [contactController::class, 'deleteContact'])->name('delete-contact');
 
     Route::get('message', function () {
         return Inertia::render('message');
     })->name('message');
     Route::get('get-messages', [messageController:: class, 'getMessages'])->name('get-messages');
     Route::post('add-message', [messageController::class, 'createMessage']) -> name('add-message');
-
+    Route::put('update-message/{id}', [messageController::class, 'updateMessage'])-> name('update-message');
+    Route::put('activate-message/{id}', [messageController::class, 'activateMessage'])->name('activate-message');
+   
     Route::post('sensor/data', [sensorController::class, 'fetch_sensor_data'])
         ->name('fetch.sensor.data');
 

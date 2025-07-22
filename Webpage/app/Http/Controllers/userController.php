@@ -57,16 +57,17 @@ class userController extends Controller
         return redirect()->back()->with('success', 'User Updated successfully!');
     }
 
-    public function deleteUser($id) {
+    public function deleteUser($id)
+    {
         $user = User::find($id);
 
-    if (!$user) {
-        return response()->json(['error' => 'User not found.'], 404);
-    }
+        if (!$user) {
+            return response()->json(['error' => 'User not found.'], 404);
+        }
 
-    $user->delete();
+        $user->delete();
 
-    return response()->json(['message' => 'User deleted successfully.']);
+        return response()->json(['message' => 'User deleted successfully.']);
     }
 
     public function fetch()

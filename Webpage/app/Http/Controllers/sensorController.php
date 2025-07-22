@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\AssignToClassEvent;
 use App\Mail\AlertMail;
 use App\Models\contacts;
+use App\Models\message;
 use App\Models\sensor;
 use App\Models\sensorData;
 use App\Models\sensorThresholds;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Nette\Schema\Elements\Structure;
 use Predis\Command\Redis\Json\JSONDEL;
+use Illuminate\Validation\ValidationException;
 
 use function Laravel\Prompts\error;
 
@@ -209,12 +211,23 @@ class sensorController extends Controller
                         ->get();
                 }
 
+                $activeMessage = message::where('isActive', true)->first();
+                $customMessage = $activeMessage ? $activeMessage->content : 'Please take immediate action and investigate the situation.';
+
                 foreach ($priorityContacts as $contact) {
                     Mail::to($contact->email)->send(
-                        new AlertMail($sensor->sensor_name, $level, $LPG, $CO, $Smoke, $Fire)
+                        new AlertMail(
+                            $sensor->sensor_name,
+                            $level,
+                            $LPG,
+                            $CO,
+                            $Smoke,
+                            $Fire,
+                            $customMessage // <-- Pass it here
+                        )
                     );
                 }
-                
+
                 Cache::put($key, now(), now()->addMinutes(5));
             }
         } else {
@@ -241,5 +254,49 @@ class sensorController extends Controller
         //     "Fire" : 0,
         //     "token" : "192.168.211.253"
         // }
+    }
+
+    public function updateSensor(Request $request, $sensorID)
+    {
+        $request->validate([
+            'sensor_name' => 'required|string',
+            'sensor_location' => 'required|string',
+            'token' => 'required|string|max:255',
+            'x_axis' => 'required|string',
+            'y_axis' => 'required|string',
+        ]);
+
+        $sensor = Sensor::findOrFail($sensorID);
+
+        if ($sensor->token !== $request->token && Sensor::where('token', $request->token)->exists()) {
+            throw ValidationException::withMessages([
+                'token' => ['The token has already been taken.']
+            ]);
+        }
+
+        $sensor->sensor_name = $request->sensor_name;
+        $sensor->sensor_location = $request->sensor_location;
+        $sensor->token = $request->token;
+        $sensor->x_axis = $request->x_axis;
+        $sensor->y_axis = $request->y_axis;
+
+        $sensor->save();
+
+        return redirect()->back()->with('success', 'Sensor updated successfully!');
+    }
+
+    public function deleteSensor($sensorID)
+    {
+        $sensor = Sensor::find($sensorID);
+
+        if (!$sensor) {
+            throw ValidationException::withMessages([
+                'sensor' => ['Sensor not found!']
+            ]);
+        }
+
+        $sensor->delete();
+
+        return redirect()->back()->with('success', 'Sensor delete successfully!');
     }
 }

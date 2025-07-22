@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <title>Sensor Alert Notification</title>
@@ -8,28 +9,33 @@
             font-family: Arial, sans-serif;
             color: #333;
         }
+
         .alert-box {
             border: 1px solid #f44336;
             background-color: #fdecea;
             padding: 20px;
             border-radius: 6px;
         }
+
         .reading-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 15px;
         }
+
         .reading-table th,
         .reading-table td {
             border: 1px solid #ddd;
             padding: 10px;
         }
+
         .reading-table th {
             background-color: #f44336;
             color: white;
         }
     </style>
 </head>
+
 <body>
 
     <h2>🚨 Emergency Alert Triggered</h2>
@@ -71,7 +77,7 @@
         </table>
 
         <p style="margin-top: 20px;">
-            Please take immediate action and investigate the situation. Safety protocols should be followed to ensure the wellbeing of all personnel.
+            {!! nl2br(e($customMessage)) !!}
         </p>
     </div>
 
@@ -81,4 +87,5 @@
     </p>
 
 </body>
+
 </html>

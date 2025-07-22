@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import MapPreview from '@/components/custom/map-preview';
 import { notifyError, notifyPromise } from '@/components/custom/toast';
+import { DeleteModal } from '@/components/custom/delete-modal';
 
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -24,8 +25,8 @@ type Components = {
     sensor_name: string;
     sensor_location: string;
     token: string;
-    x_axis: number;
-    y_axis: number;
+    x_axis: string;
+    y_axis: string;
     status: string;
     isAlert: number;
 }
@@ -44,10 +45,11 @@ const Components = () => {
     const [addModal, setAddModal] = useState(false);
     const [viewSensor, setViewSensor] = useState<Components | null>(null);
     const [updateSensor, setUpdateSensor] = useState<Components | null>(null);
+    const [deleteSensor, setDeleteSensor] = useState<Components | null>(null);
     const [showMapLayout, setMapLayout] = useState(false);
     const [previewCoord, setPreviewCoord] = useState<{ x: string, y: string }>({ x: '', y: '' });
     const [previewSource, setPreviewSource] = useState<'add' | 'update' | null>(null);
-    const { data: createData, setUpdateData: setCreateData, post, processing: creating, errors: createErrors, reset: resetCreateForm } = useForm<sensorForm>({
+    const { data: createData, setData: setCreateData, post, processing: creating, errors: createErrors, reset: resetCreateForm } = useForm<sensorForm>({
         sensor_name: '',
         token: '',
         sensor_location: '',
@@ -61,18 +63,18 @@ const Components = () => {
         sensor_name: '',
         token: '',
         sensor_location: '',
-        x_axis: 0,
-        y_axis: 0,
+        x_axis: '',
+        y_axis: '',
     })
 
-    const onEditSensor = (sensor: Sensor) => {
+    const onEditSensor = (sensor: Components) => {
         setUpdateData({
             sensorID: sensor.sensorID,
             sensor_name: sensor.sensor_name,
             token: sensor.token,
             sensor_location: sensor.sensor_location,
-            x_axis: sensor.x_axis,
-            y_axis: sensor.y_axis,
+            x_axis: String(sensor.x_axis),
+            y_axis: String(sensor.y_axis),
         });
         setUpdateSensor(sensor); // this will control the modal visibility
 
@@ -137,6 +139,45 @@ const Components = () => {
         }
     };
 
+    const updateSubmit: FormEventHandler = (e) => {
+        e.preventDefault();
+
+        if (!updateSensor) return;
+
+        put(route('update-sensor', updateSensor.sensorID), {
+            onSuccess: () => {
+                toast.success('Sensor updated successfully!');
+            },
+            onError: (e) => {
+                const errorMessages = Object.values(e).flat();
+                toast.error(errorMessages[0] || "Failed to update sensor");
+            },
+            onFinish: () => {
+                resetUpdateForm();
+                setUpdateSensor(null);
+                fetchSensors();
+            }
+        })
+    }
+
+    const handleDeleteSensor = async () => {
+        if (!deleteSensor) return;
+
+        router.delete(route('delete-sensor', deleteSensor.sensorID), {
+            onSuccess: () => {
+                toast.success("Sensor deleted successfully!");
+            },
+            onError: (e) => {
+                const errorMessages = Object.values(e).flat();
+                toast.error(errorMessages[0] || "Failed to delete sensor");
+            },
+            onFinish: () => {
+                setDeleteSensor(null);
+                fetchSensors();
+            }
+        })
+    }
+
 
     return (
         <>
@@ -188,7 +229,7 @@ const Components = () => {
                                         <td className='px-6 py-4  whitespace-nowrap text-sm font-medium flex gap-2 justify-center'>
                                             <button className='px-2 py-1 rounded text-white bg-green-400 hover:bg-green-900 dark:bg-green-400' onClick={() => setViewSensor(components)}>View</button>
                                             <button className='px-2 py-1 rounded text-white bg-indigo-400 hover:bg-indigo-900 dark:bg-indigo-400' onClick={() => onEditSensor(components)}>Edit</button>
-                                            <button className='px-2 py-1 rounded text-white bg-red-400 hover:bg-red-900 dark:bg-red-400'>Remove</button>
+                                            <button className='px-2 py-1 rounded text-white bg-red-400 hover:bg-red-900 dark:bg-red-400' onClick={() => setDeleteSensor(components)}>Remove</button>
                                         </td>
                                     </tr>
                                 ))}
@@ -317,7 +358,7 @@ const Components = () => {
             <Modal header='Update Sensor' subtitle='sample' isVisible={updateSensor !== null} onClose={() => setUpdateSensor(null)} children={
                 <>
                     {updateSensor && updateData && (
-                        <form>
+                        <form onSubmit={updateSubmit}>
                             <div className='overflow-x-auto p-4'>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                     <div className="grid gap-2">
@@ -393,7 +434,7 @@ const Components = () => {
                                 </div>
                                 <div className="mt-10 w-full bottom-10 right-10 flex flex-col sm:flex-row gap-2 sm:gap-4 justify-end">
                                     <button className="cursor-pointer bg-gray-500 text-white py-2 px-4 rounded-md" onClick={() => { setUpdateSensor(null); resetUpdateForm(); }}>Cancel</button>
-                                    <div className="cursor-pointer bg-red-500 text-white py-2 px-4 rounded-md" onClick={() => { showMapPreview(updateData.x_axis, updateData.y_axis);}}>Map Preview</div>
+                                    <div className="cursor-pointer bg-red-500 text-white py-2 px-4 rounded-md" onClick={() => { showMapPreview(updateData.x_axis, updateData.y_axis); }}>Map Preview</div>
                                     <button type='submit' className="cursor-pointer bg-blue-500 text-white py-2 px-4 rounded-md">Update</button>
                                 </div>
                             </div>
@@ -403,6 +444,8 @@ const Components = () => {
                 </>
             }>
             </Modal>
+
+            <DeleteModal isVisible={deleteSensor !== null} onClose={() => setDeleteSensor(null)} onConfirm={handleDeleteSensor} />
 
         </>
     )
